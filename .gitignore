@@ -1,0 +1,33 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Go binaries & build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+backend/tmp/
+backend/bin/
+backend/dist/
+backend/main
+backend/server
+
+# Node & dependencies
+node_modules/
+dist/
+.astro/
+package-lock.json (if needed, but usually tracked)
+npm-debug.log*
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
