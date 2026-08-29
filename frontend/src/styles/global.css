@@ -1,1 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
+/* ============================================
+   🎨 PUSPENKOM BKN — Design Tokens
+   ============================================ */
+
+@theme {
+  /* Primary Gradient Colors */
+  --color-primary-blue: #269DD8;
+  --color-primary-pink: #DF2463;
+  --color-primary-blue-hover: #1C7DAE;
+  --color-primary-pink-hover: #B91C51;
+  --color-primary-blue-light: #E9F5FB;
+  --color-primary-pink-light: #FCE9EF;
+
+  /* Secondary Colors */
+  --color-secondary-gold: #D97706;
+  --color-secondary-teal: #0D9488;
+  --color-secondary-indigo: #4F46E5;
+
+  /* Semantic Colors */
+  --color-success: #16A34A;
+  --color-success-light: #DCFCE7;
+  --color-warning: #D97706;
+  --color-warning-light: #FEF3C7;
+  --color-error: #DC2626;
+  --color-error-light: #FEE2E2;
+  --color-info: #2563EB;
+  --color-info-light: #DBEAFE;
+
+  /* Shadows */
+  --shadow-focus: 0 0 0 3px rgba(38, 157, 216, 0.2);
+
+  /* Font Family */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ============================================
+   🔤 Google Fonts
+   ============================================ */
+
+/* ============================================
+   🌍 Global Base Styles
+   ============================================ */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: #0F172A;
+  background-color: #F8FAFC;
+}
+
+/* Focus visible ring — accessibility */
+*:focus-visible {
+  outline: 2px solid var(--color-primary-blue);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   🎨 Utility: Primary Gradient
+   ============================================ */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #269DD8 0%, #DF2463 100%);
+}
+
+.bg-gradient-primary-hover {
+  background: linear-gradient(135deg, #1C7DAE 0%, #B91C51 100%);
+}
+
+.text-gradient-primary {
+  background: linear-gradient(135deg, #269DD8 0%, #DF2463 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
