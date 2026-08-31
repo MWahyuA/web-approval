@@ -1,7 +1,7 @@
 import React, { useState, type FormEvent } from "react";
-import Button from "./ui/Button";
-import Input from "./ui/Input";
-import Logo from "./ui/Logo";
+import Button from "../ui/Button";
+import Input from "../ui/Input";
+import Logo from "../ui/Logo";
 
 export default function LoginForm() {
     const [email, setEmail] = useState("");
