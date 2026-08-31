@@ -3,6 +3,7 @@ import React from "react";
 interface LogoProps {
     size?: "sm" | "md" | "lg";
     showText?: boolean;
+    inverseText?: boolean;
     className?: string;
 }
 
@@ -15,6 +16,7 @@ const sizeMap = {
 export default function Logo({
     size = "md",
     showText = true,
+    inverseText = false,
     className = "",
 }: LogoProps) {
     const s = sizeMap[size];
@@ -35,10 +37,10 @@ export default function Logo({
             {/* Wordmark */}
             {showText && (
                 <div className="flex flex-col leading-tight">
-                    <span className={`font-bold text-slate-900 ${s.text} tracking-tight`}>
+                    <span className={`font-bold ${inverseText ? 'text-white' : 'text-slate-900'} ${s.text} tracking-tight`}>
                         Puspenkom
                     </span>
-                    <span className="text-[10px] font-semibold tracking-[0.12em] uppercase text-slate-400">
+                    <span className={`text-[10px] font-semibold tracking-[0.12em] uppercase ${inverseText ? 'text-white/80' : 'text-slate-400'}`}>
                         BKN
                     </span>
                 </div>

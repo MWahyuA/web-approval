@@ -1,0 +1,12 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import DashboardLayout from "../../components/layout/DashboardLayout";
+import DashboardAdminPuspenkom from "../../components/view/DashboardAdminPuspenkom";
+import "../../styles/global.css";
+---
+
+<Layout title="Dashboard Admin Puspenkom — BKN">
+    <DashboardLayout client:load activePath="/dashboard">
+        <DashboardAdminPuspenkom client:load />
+    </DashboardLayout>
+</Layout>
