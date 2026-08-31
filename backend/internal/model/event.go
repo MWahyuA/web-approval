@@ -1,6 +1,5 @@
 package model
 
-
 // Event merepresentasikan data Acara Penilaian Kompetensi ASN di Supabase
 type Event struct {
 	ID         string         `json:"id"`
@@ -9,10 +8,12 @@ type Event struct {
 	StartDate  string         `json:"start_date,omitempty"`
 	EndDate    string         `json:"end_date,omitempty"`
 	StartTime  string         `json:"start_time,omitempty"`
-	Price      float64        `json:"price"`
-	Status     string         `json:"status"` // 'DRAFT', 'PUBLISHED', 'CLOSED'
-	CreatedBy  string         `json:"created_by"`
-	Sessions   []EventSession `json:"sessions,omitempty"`
+	Price          float64        `json:"price"`
+	Status         string         `json:"status"` // 'DRAFT', 'PUBLISHED', 'CLOSED'
+	CreatedBy      string         `json:"created_by"`
+	TotalQuota     int            `json:"total_quota"`
+	RemainingQuota int            `json:"remaining_quota"`
+	Sessions       []EventSession `json:"sessions"`
 }
 
 // EventSession merepresentasikan data sesi jadwal & kuota per acara
