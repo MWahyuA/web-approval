@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/puspenkom-bkn/backend/internal/middleware"
 	"github.com/puspenkom-bkn/backend/internal/model"
 	"github.com/puspenkom-bkn/backend/internal/service"
 )
@@ -49,4 +50,21 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
+}
+
+func (h *AuthHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized: Context user ID tidak ditemukan", http.StatusUnauthorized)
+		return
+	}
+
+	user, err := h.service.GetProfile(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user)
 }

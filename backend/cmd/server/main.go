@@ -27,10 +27,18 @@ func main() {
 		defer db.Close()
 	}
 
-	// 3. Inisialisasi Dependency Layer Auth (Repo -> Service -> Handler)
+	// 3. Inisialisasi Dependency Layer (Repo -> Service -> Handler)
 	userRepo := repository.NewUserRepository(db)
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret)
 	authHandler := handler.NewAuthHandler(authService)
+
+	instRepo := repository.NewInstitutionRepository(db)
+	instService := service.NewInstitutionService(instRepo)
+	instHandler := handler.NewInstitutionHandler(instService)
+
+	eventRepo := repository.NewEventRepository(db)
+	eventService := service.NewEventService(eventRepo)
+	eventHandler := handler.NewEventHandler(eventService)
 
 	// 4. Setup router
 	mux := http.NewServeMux()
@@ -41,6 +49,23 @@ func main() {
 	// Auth Endpoints (Register & Login)
 	mux.HandleFunc("POST /api/v1/auth/register", authHandler.Register)
 	mux.HandleFunc("POST /api/v1/auth/login", authHandler.Login)
+
+	// Protected Endpoints (Memerlukan Header Authorization: Bearer <token>)
+	authMiddleware := middleware.AuthMiddleware(authService)
+	mux.Handle("GET /api/v1/auth/me", authMiddleware(http.HandlerFunc(authHandler.GetProfile)))
+
+	// Institutions & Staff Endpoints
+	mux.Handle("POST /api/v1/institutions", authMiddleware(http.HandlerFunc(instHandler.CreateInstitution)))
+	mux.HandleFunc("GET /api/v1/institutions", instHandler.GetInstitutions)
+	mux.HandleFunc("GET /api/v1/institutions/{id}", instHandler.GetInstitutionByID)
+	mux.Handle("POST /api/v1/staff", authMiddleware(http.HandlerFunc(instHandler.CreateStaff)))
+	mux.HandleFunc("GET /api/v1/institutions/{id}/staff", instHandler.GetStaffByInstitution)
+
+	// Events & Event Sessions Endpoints
+	mux.Handle("POST /api/v1/events", authMiddleware(http.HandlerFunc(eventHandler.CreateEvent)))
+	mux.HandleFunc("GET /api/v1/events", eventHandler.GetEvents)
+	mux.HandleFunc("GET /api/v1/events/{id}", eventHandler.GetEventByID)
+	mux.Handle("POST /api/v1/events/{id}/sessions", authMiddleware(http.HandlerFunc(eventHandler.CreateSession)))
 
 	// 5. Apply middleware
 	stack := middleware.Chain(

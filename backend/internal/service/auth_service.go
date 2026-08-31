@@ -38,10 +38,15 @@ func (s *AuthService) Register(req model.RegisterRequest) (*model.AuthResponse, 
 		return nil, fmt.Errorf("gagal memproses password: %w", err)
 	}
 
-	// 3. Set default role jika kosong
+	// 3. Set default role jika kosong / petakan ke user_role enum
 	role := req.Role
-	if role == "" {
-		role = "user"
+	switch role {
+	case "admin_puspenkom", "kepala_puspenkom", "admin_instansi", "kepala_instansi":
+		// Valid enum
+	case "admin":
+		role = "admin_puspenkom"
+	default:
+		role = "admin_instansi"
 	}
 
 	// 4. Buat objek user baru
@@ -93,6 +98,36 @@ func (s *AuthService) Login(req model.LoginRequest) (*model.AuthResponse, error)
 		Token: token,
 		User:  *user,
 	}, nil
+}
+
+// GetProfile mengambil profil user berdasarkan ID (dari JWT)
+func (s *AuthService) GetProfile(userID string) (*model.User, error) {
+	user, err := s.repo.GetUserByID(userID)
+	if err != nil {
+		return nil, errors.New("user tidak ditemukan")
+	}
+	return user, nil
+}
+
+// ValidateToken memverifikasi token JWT dan mengembalikan claims
+func (s *AuthService) ValidateToken(tokenString string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("metode signing tidak valid: %v", token.Header["alg"])
+		}
+		return []byte(s.jwtSecret), nil
+	})
+
+	if err != nil || !token.Valid {
+		return nil, errors.New("token tidak valid atau sudah kadaluwarsa")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("claims token tidak valid")
+	}
+
+	return claims, nil
 }
 
 // generateToken membuat string token JWT berdurasi 24 jam
