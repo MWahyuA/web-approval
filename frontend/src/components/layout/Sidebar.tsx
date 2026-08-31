@@ -12,58 +12,80 @@ interface SidebarProps {
     activePath?: string;
     collapsed?: boolean;
     onToggle?: () => void;
+    userRole?: string;
 }
 
-const navItems: NavItem[] = [
-    {
-        label: "Dashboard",
-        href: "/dashboard",
-        icon: (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" />
-            </svg>
-        ),
-    },
-    {
-        label: "Kelola Event",
-        href: "/dashboard/events",
-        icon: (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />
-            </svg>
-        ),
-    },
-    {
-        label: "Surat Masuk",
-        href: "/dashboard/surat",
-        icon: (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><line x1="10" x2="8" y1="9" y2="9" />
-            </svg>
-        ),
-        badge: 5,
-    },
-    {
-        label: "Laporan",
-        href: "/dashboard/laporan",
-        icon: (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" />
-            </svg>
-        ),
-    },
-    {
-        label: "Profil",
-        href: "/dashboard/profil",
-        icon: (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="8" r="5" /><path d="M20 21a8 8 0 0 0-16 0" />
-            </svg>
-        ),
-    },
-];
+const ICONS = {
+    dashboard: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" />
+        </svg>
+    ),
+    event: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" />
+        </svg>
+    ),
+    surat: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><line x1="10" x2="8" y1="9" y2="9" />
+        </svg>
+    ),
+    pendaftaran: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" x2="19" y1="8" y2="14" /><line x1="22" x2="16" y1="11" y2="11" />
+        </svg>
+    ),
+    laporan: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" />
+        </svg>
+    ),
+    profil: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="8" r="5" /><path d="M20 21a8 8 0 0 0-16 0" />
+        </svg>
+    ),
+};
 
-export default function Sidebar({ activePath = "/dashboard", collapsed = false, onToggle }: SidebarProps) {
+function getNavItems(role: string): NavItem[] {
+    if (role === "admin_puspenkom") {
+        return [
+            { label: "Dashboard", href: "/admin-puspenkom/dashboard", icon: ICONS.dashboard },
+            { label: "Kelola Event", href: "/admin-puspenkom/events", icon: ICONS.event },
+            { label: "Surat Masuk", href: "/admin-puspenkom/surat", icon: ICONS.surat, badge: 5 },
+            { label: "Laporan", href: "/admin-puspenkom/laporan", icon: ICONS.laporan },
+        ];
+    } else if (role === "kepala_puspenkom") {
+        return [
+            { label: "Dashboard", href: "/kepala-puspenkom/dashboard", icon: ICONS.dashboard },
+            { label: "Surat Masuk", href: "/kepala-puspenkom/surat", icon: ICONS.surat },
+            { label: "Laporan", href: "/kepala-puspenkom/laporan", icon: ICONS.laporan },
+        ];
+    } else if (role === "admin_instansi") {
+        return [
+            { label: "Dashboard", href: "/admin-instansi/dashboard", icon: ICONS.dashboard },
+            { label: "Event Tersedia", href: "/admin-instansi/events", icon: ICONS.event },
+            { label: "Pendaftaran", href: "/admin-instansi/pendaftaran", icon: ICONS.pendaftaran },
+            { label: "Surat", href: "/admin-instansi/surat", icon: ICONS.surat },
+        ];
+    } else if (role === "kepala_instansi") {
+        return [
+            { label: "Dashboard", href: "/kepala-instansi/dashboard", icon: ICONS.dashboard },
+            { label: "Event Tersedia", href: "/kepala-instansi/events", icon: ICONS.event },
+            { label: "Surat Pengajuan", href: "/kepala-instansi/surat", icon: ICONS.surat, badge: 2 },
+        ];
+    }
+
+    // Default fallback
+    return [
+        { label: "Dashboard", href: "/dashboard", icon: ICONS.dashboard },
+    ];
+}
+
+export default function Sidebar({ activePath = "/dashboard", collapsed = false, onToggle, userRole = "" }: SidebarProps) {
+    const navItems = getNavItems(userRole);
+
     return (
         <aside
             className={`
