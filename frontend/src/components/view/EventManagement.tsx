@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Badge from "../ui/Badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/Table";
 import Modal from "../ui/Modal";
 
 // Local interface matching the API response
@@ -11,6 +12,7 @@ interface EventSession {
     session_date: string;
     max_quota: number;
     used_quota: number;
+    remaining_quota?: number;
 }
 
 interface EventData {
@@ -78,7 +80,7 @@ export default function EventManagement() {
         try {
             const [eventsRes, locationsRes] = await Promise.all([
                 fetch("http://localhost:8080/api/v1/events"),
-                fetch("http://localhost:8080/api/v1/institutions")
+                fetch("http://localhost:8080/api/v1/bkn-regional-offices")
             ]);
 
             if (eventsRes.ok) {
@@ -215,60 +217,90 @@ export default function EventManagement() {
 
             {/* Table Card */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm w-full overflow-hidden flex flex-col">
-                <div className="overflow-x-auto w-full">
-                    <table className="w-full text-left flex-col min-w-[500px]">
-                        <thead>
-                            <tr className="border-b border-slate-200">
-                                <th className="bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Judul Event</th>
-                                <th className="bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Lokasi</th>
-                                <th className="bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tanggal</th>
-                                <th className="bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Kuota</th>
-                                <th className="bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th className="bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={6} className="text-center py-10 text-slate-500">Memuat data event...</td>
-                                </tr>
-                            ) : filteredEvents.length > 0 ? (
-                                filteredEvents.map((event) => (
-                                    <tr key={event.id} className="hover:bg-slate-50/80 transition-colors">
-                                        <td className="px-5 py-3 font-medium text-slate-700 text-sm whitespace-nowrap">{event.title}</td>
-                                        <td className="px-5 py-3 text-sm text-slate-600 whitespace-nowrap">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Judul Event</TableHead>
+                            <TableHead>Lokasi</TableHead>
+                            <TableHead>Tanggal</TableHead>
+                            <TableHead>Jumlah Kuota</TableHead>
+                            <TableHead>Kuota Tersisa</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="!text-center">Aksi</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            <>
+                                {[...Array(3)].map((_, i) => (
+                                    <TableRow key={i} className="animate-pulse">
+                                        <TableCell><div className="h-4 bg-slate-200 rounded w-3/4"></div></TableCell>
+                                        <TableCell><div className="h-4 bg-slate-200 rounded w-1/2"></div></TableCell>
+                                        <TableCell><div className="h-4 bg-slate-200 rounded w-2/3"></div></TableCell>
+                                        <TableCell><div className="h-4 bg-slate-200 rounded w-16"></div></TableCell>
+                                        <TableCell><div className="h-4 bg-slate-200 rounded w-16"></div></TableCell>
+                                        <TableCell><div className="h-6 bg-slate-200 rounded-full w-16"></div></TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <div className="w-8 h-8 rounded-full bg-slate-200"></div>
+                                                <div className="w-8 h-8 rounded-full bg-slate-200"></div>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </>
+                        ) : filteredEvents.length > 0 ? (
+                            filteredEvents.map((event) => {
+                                const maxQuota = event.sessions ? event.sessions.reduce((acc, curr) => acc + (curr.max_quota || 0), 0) : 0;
+                                const usedQuota = event.sessions ? event.sessions.reduce((acc, curr) => acc + (curr.used_quota || 0), 0) : 0;
+                                const remainingQuota = maxQuota - usedQuota;
+
+                                return (
+                                    <TableRow key={event.id}>
+                                        <TableCell className="font-medium text-slate-700">{event.title}</TableCell>
+                                        <TableCell>
                                             {locations.find(l => l.id === event.location_id)?.name || "Pusat Penilaian - BKN"}
-                                        </td>
-                                        <td className="px-5 py-3 text-sm text-slate-600 whitespace-nowrap">{event.start_date} s.d {event.end_date}</td>
-                                        <td className="px-5 py-3 text-sm text-slate-600 whitespace-nowrap">
-                                            {event.sessions && event.sessions.length > 0 ? `${event.sessions[0].max_quota} per sesi` : "-"}
-                                        </td>
-                                        <td className="px-5 py-3 whitespace-nowrap">
+                                        </TableCell>
+                                        <TableCell>
+                                            {new Date(event.start_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            {" - "}
+                                            {new Date(event.end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        </TableCell>
+                                        <TableCell className="font-medium text-slate-700">
+                                            {maxQuota} orang
+                                        </TableCell>
+                                        <TableCell className="font-medium text-primary-blue">
+                                            {remainingQuota} orang
+                                        </TableCell>
+                                        <TableCell>
                                             <Badge
                                                 variant={event.status === 'active' ? 'success' : event.status === 'completed' ? 'info' : 'draft'}
                                             >
                                                 {event.status === 'active' ? 'Aktif' : event.status === 'completed' ? 'Selesai' : 'Tidak Aktif'}
                                             </Badge>
-                                        </td>
-                                        <td className="px-5 py-3 text-right whitespace-nowrap">
-                                            <button className="text-slate-400 hover:text-primary-blue p-2 rounded-lg hover:bg-slate-50 transition-colors" title="Edit Event">
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={6} className="text-center py-10 text-slate-500">
-                                        Tidak ada event yang ditemukan untuk pencarian "{search}".
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm" title="Lihat">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                </button>
+                                                <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-colors shadow-sm" title="Edit">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                                                </button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={7} className="text-center py-10 text-slate-500">
+                                    Tidak ada event yang ditemukan untuk pencarian "{search}".
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
             </div>
 
             {/* Pagination Dummies */}
