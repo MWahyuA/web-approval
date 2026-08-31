@@ -7,7 +7,7 @@ export default function LoginForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+    const [errors, setErrors] = useState<{ email?: string; password?: string; root?: string }>({});
 
     function validate() {
         const errs: typeof errors = {};
@@ -25,9 +25,40 @@ export default function LoginForm() {
         if (Object.keys(errs).length > 0) return;
 
         setIsLoading(true);
-        // TODO: integrate with Go backend API
-        await new Promise((r) => setTimeout(r, 1500));
-        setIsLoading(false);
+        setErrors({});
+
+        try {
+            const response = await fetch("http://localhost:8080/api/v1/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                setErrors({ root: errorText || "Gagal masuk. Periksa kembali email dan password Anda." });
+                return;
+            }
+
+            const data = await response.json();
+
+            // Simpan token dan data user ke localStorage
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+            // Redirect sesuai role
+            if (data.user && data.user.role === "admin_puspenkom") {
+                window.location.href = "/admin-puspenkom/dashboard";
+            } else {
+                window.location.href = "/"; // Default for now
+            }
+        } catch (error) {
+            setErrors({ root: "Gagal terhubung ke server. Pastikan server berjalan." });
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -89,6 +120,16 @@ export default function LoginForm() {
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+                        {errors.root && (
+                            <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                <span>{errors.root}</span>
+                            </div>
+                        )}
                         <Input
                             label="Email"
                             type="email"
@@ -97,7 +138,7 @@ export default function LoginForm() {
                             value={email}
                             onChange={(e) => {
                                 setEmail(e.target.value);
-                                if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                                if (errors.email || errors.root) setErrors((prev) => ({ ...prev, email: undefined, root: undefined }));
                             }}
                             error={errors.email}
                             leftIcon={
@@ -117,7 +158,7 @@ export default function LoginForm() {
                             value={password}
                             onChange={(e) => {
                                 setPassword(e.target.value);
-                                if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                                if (errors.password || errors.root) setErrors((prev) => ({ ...prev, password: undefined, root: undefined }));
                             }}
                             error={errors.password}
                             leftIcon={

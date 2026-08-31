@@ -7,8 +7,8 @@ interface HeaderProps {
 }
 
 export default function Header({
-    userName = "Admin Puspenkom",
-    userRole = "Admin Puspenkom",
+    userName = "",
+    userRole = "",
     notificationCount = 5,
 }: HeaderProps) {
     const [showDropdown, setShowDropdown] = useState(false);
@@ -69,11 +69,11 @@ export default function Header({
                     className="flex items-center gap-3 hover:bg-slate-50 rounded-lg px-2 py-1.5 transition-colors cursor-pointer"
                 >
                     <div className="w-9 h-9 rounded-full bg-gradient-primary flex items-center justify-center text-white font-bold text-sm shrink-0">
-                        {userName.charAt(0).toUpperCase()}
+                        {userName ? userName.charAt(0).toUpperCase() : "?"}
                     </div>
                     <div className="hidden sm:flex flex-col items-start leading-tight">
-                        <span className="text-sm font-semibold text-slate-800">{userName}</span>
-                        <span className="text-[11px] text-slate-400">{userRole}</span>
+                        <span className="text-sm font-semibold text-slate-800">{userName || "\u00A0"}</span>
+                        <span className="text-[11px] text-slate-400 capitalize">{userRole ? userRole.replace(/_/g, ' ') : "\u00A0"}</span>
                     </div>
                     <svg className="text-slate-400 hidden sm:block" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m6 9 6 6 6-6" />
@@ -92,10 +92,17 @@ export default function Header({
                             Pengaturan
                         </a>
                         <div className="border-t border-slate-100 my-1" />
-                        <a href="/login" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 no-underline">
+                        <button
+                            onClick={() => {
+                                localStorage.removeItem("token");
+                                localStorage.removeItem("user");
+                                window.location.href = "/login";
+                            }}
+                            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 no-underline w-full text-left"
+                        >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>
                             Keluar
-                        </a>
+                        </button>
                     </div>
                 )}
             </div>

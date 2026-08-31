@@ -1,16 +1,16 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import DashboardLayout from "../../components/layout/DashboardLayout";
-import DashboardAdminPuspenkom from "../../components/view/DashboardAdminPuspenkom";
+import EventManagement from "../../components/view/EventManagement";
 import "../../styles/global.css";
 ---
 
 <Layout
-    title="Dashboard Admin Puspenkom — BKN"
+    title="Kelola Event — Puspenkom BKN"
     requireAuth={true}
     allowedRoles={["admin_puspenkom"]}
 >
-    <DashboardLayout client:load activePath="/dashboard">
-        <DashboardAdminPuspenkom client:load />
+    <DashboardLayout client:load activePath="/admin-puspenkom/events">
+        <EventManagement client:load />
     </DashboardLayout>
 </Layout>
