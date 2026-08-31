@@ -10,6 +10,8 @@ import (
 	"github.com/puspenkom-bkn/backend/internal/database"
 	"github.com/puspenkom-bkn/backend/internal/handler"
 	"github.com/puspenkom-bkn/backend/internal/middleware"
+	"github.com/puspenkom-bkn/backend/internal/repository"
+	"github.com/puspenkom-bkn/backend/internal/service"
 )
 
 func main() {
@@ -25,20 +27,29 @@ func main() {
 		defer db.Close()
 	}
 
-	// 3. Setup router
+	// 3. Inisialisasi Dependency Layer Auth (Repo -> Service -> Handler)
+	userRepo := repository.NewUserRepository(db)
+	authService := service.NewAuthService(userRepo, cfg.JWTSecret)
+	authHandler := handler.NewAuthHandler(authService)
+
+	// 4. Setup router
 	mux := http.NewServeMux()
 
 	// Health check endpoint
 	mux.HandleFunc("GET /api/health", handler.HealthCheck)
 
-	// 4. Apply middleware
+	// Auth Endpoints (Register & Login)
+	mux.HandleFunc("POST /api/v1/auth/register", authHandler.Register)
+	mux.HandleFunc("POST /api/v1/auth/login", authHandler.Login)
+
+	// 5. Apply middleware
 	stack := middleware.Chain(
 		middleware.Logger,
 		middleware.CORS(cfg.AllowedOrigins),
 		middleware.Recovery,
 	)
 
-	// 5. Start server
+	// 6. Start server
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("🚀 Server starting on http://localhost%s", addr)
 
