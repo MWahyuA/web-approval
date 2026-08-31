@@ -18,7 +18,7 @@ func NewEventRepository(db *sql.DB) *EventRepository {
 func (r *EventRepository) CreateEvent(e *model.Event) error {
 	query := `
 		INSERT INTO events (id, title, location_id, start_date, end_date, start_time, price, status, created_by)
-		VALUES (gen_random_uuid(), $1, NULLIF($2, '')::uuid, $3, $4, $5, $6, $7::status_enum, NULLIF($8, '')::uuid)
+		VALUES (gen_random_uuid(), $1, NULLIF($2, '')::uuid, $3, $4, $5, $6, $7::event_status, NULLIF($8, '')::uuid)
 		RETURNING id
 	`
 	err := r.db.QueryRow(query, e.Title, e.LocationID, e.StartDate, e.EndDate, e.StartTime, e.Price, e.Status, e.CreatedBy).Scan(&e.ID)

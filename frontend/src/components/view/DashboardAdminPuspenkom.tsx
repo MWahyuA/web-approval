@@ -2,6 +2,7 @@ import React from "react";
 import StatCard from "../ui/StatCard";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/Table";
 
 // Dummy data based on PRD requirement
 const unverifiedLetters = [
@@ -70,45 +71,39 @@ export default function DashboardAdminPuspenkom() {
                         <h2 className="font-semibold text-slate-800">📋 Surat Masuk Perlu Verifikasi</h2>
                         <a href="/dashboard/surat" className="text-sm font-medium text-primary-blue hover:underline">Lihat Semua</a>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-[500px]">
-                            <thead>
-                                <tr>
-                                    <th className="bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">No. Surat</th>
-                                    <th className="bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">Instansi</th>
-                                    <th className="bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">Peserta</th>
-                                    <th className="bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">Status</th>
-                                    <th className="bg-slate-50 px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200 text-right">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {unverifiedLetters.map((item, idx) => (
-                                    <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                                        <td className="px-5 py-3">
-                                            <span className="font-medium text-slate-700 text-sm">{item.id}</span>
-                                        </td>
-                                        <td className="px-5 py-3 text-sm text-slate-600">{item.instansi}</td>
-                                        <td className="px-5 py-3">
-                                            <span className="inline-flex items-center justify-center bg-slate-100 text-slate-700 text-xs font-semibold px-2 py-0.5 rounded-full">
-                                                {item.peserta}
-                                            </span>
-                                        </td>
-                                        <td className="px-5 py-3">
-                                            <Badge variant={item.status.includes('Baru') ? 'waiting' : 'info'}>
-                                                {item.status.replace('🟡', '').replace('🔵', '').trim()}
+                    <div className="w-full">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>No. Surat</TableHead>
+                                    <TableHead>Instansi</TableHead>
+                                    <TableHead>Jml Peserta</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="!text-right">Aksi</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {unverifiedLetters.map((letter) => (
+                                    <TableRow key={letter.id}>
+                                        <TableCell className="font-semibold text-slate-700">{letter.id}</TableCell>
+                                        <TableCell>{letter.instansi}</TableCell>
+                                        <TableCell>{letter.peserta} Orang</TableCell>
+                                        <TableCell>
+                                            <Badge variant={letter.status.includes('Baru') ? 'waiting' : 'info'}>
+                                                {letter.status.replace('🟡', '').replace('🔵', '').trim()}
                                             </Badge>
-                                        </td>
-                                        <td className="px-5 py-3 text-right">
+                                        </TableCell>
+                                        <TableCell className="text-right">
                                             <Button variant="ghost" size="sm" className="!px-2 !py-1 text-slate-400 hover:text-primary-blue">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                     <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
                                                 </svg>
                                             </Button>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
 
