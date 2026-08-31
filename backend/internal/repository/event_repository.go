@@ -90,7 +90,7 @@ func (r *EventRepository) CreateEventSession(s *model.EventSession) error {
 
 func (r *EventRepository) GetSessionsByEventID(eventID string) ([]model.EventSession, error) {
 	query := `
-		SELECT id, event_id, COALESCE(session_date::text, ''), COALESCE(max_quota, 0), COALESCE(used_quota, 0)
+		SELECT id, event_id, COALESCE(session_date::text, ''), COALESCE(max_quota, 0), COALESCE(used_quota, 0), GREATEST(COALESCE(max_quota, 0) - COALESCE(used_quota, 0), 0)
 		FROM event_sessions 
 		WHERE event_id = $1 
 		ORDER BY session_date ASC
@@ -104,7 +104,7 @@ func (r *EventRepository) GetSessionsByEventID(eventID string) ([]model.EventSes
 	var list []model.EventSession
 	for rows.Next() {
 		var s model.EventSession
-		if err := rows.Scan(&s.ID, &s.EventID, &s.SessionDate, &s.MaxQuota, &s.UsedQuota); err != nil {
+		if err := rows.Scan(&s.ID, &s.EventID, &s.SessionDate, &s.MaxQuota, &s.UsedQuota, &s.RemainingQuota); err != nil {
 			return nil, err
 		}
 		list = append(list, s)

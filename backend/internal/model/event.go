@@ -17,11 +17,12 @@ type Event struct {
 
 // EventSession merepresentasikan data sesi jadwal & kuota per acara
 type EventSession struct {
-	ID          string `json:"id"`
-	EventID     string `json:"event_id"`
-	SessionDate string `json:"session_date"`
-	MaxQuota    int    `json:"max_quota"`
-	UsedQuota   int    `json:"used_quota"`
+	ID             string `json:"id"`
+	EventID        string `json:"event_id"`
+	SessionDate    string `json:"session_date"`
+	MaxQuota       int    `json:"max_quota"`
+	UsedQuota      int    `json:"used_quota"`
+	RemainingQuota int    `json:"remaining_quota"`
 }
 
 // CreateEventRequest payload JSON untuk membuat acara penilaian baru
