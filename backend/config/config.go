@@ -1,8 +1,12 @@
 package config
 
-import "os"
+import (
+	"log"
+	"os"
 
-// Config holds application configuration
+	"github.com/joho/godotenv" // 1. Tambahkan import ini
+)
+
 type Config struct {
 	Port           string
 	DatabaseURL    string
@@ -10,18 +14,22 @@ type Config struct {
 	AllowedOrigins string
 }
 
-// Load reads configuration from environment variables with defaults
 func Load() *Config {
+	// 2. Muat file .env jika ada (jika tidak ada/production, akan memakai OS env)
+	if err := godotenv.Load(); err != nil {
+		log.Println("ℹ️ File .env tidak ditemukan, menggunakan variabel lingkungan OS")
+	}
+
 	return &Config{
 		Port:           getEnv("PORT", "8080"),
-		DatabaseURL:    getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/puspenkom?sslmode=disable"),
-		JWTSecret:      getEnv("JWT_SECRET", "change-me-in-production"),
+		DatabaseURL:    getEnv("DATABASE_URL", ""),
+		JWTSecret:      getEnv("JWT_SECRET", "default-secret-key"),
 		AllowedOrigins: getEnv("ALLOWED_ORIGINS", "http://localhost:4321"),
 	}
 }
 
 func getEnv(key, fallback string) string {
-	if val, ok := os.LookupEnv(key); ok {
+	if val, ok := os.LookupEnv(key); ok && val != "" {
 		return val
 	}
 	return fallback
