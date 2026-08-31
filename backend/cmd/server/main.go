@@ -40,6 +40,10 @@ func main() {
 	eventService := service.NewEventService(eventRepo)
 	eventHandler := handler.NewEventHandler(eventService)
 
+	bknOfficeRepo := repository.NewBKNOfficeRepository(db)
+	bknOfficeService := service.NewBKNOfficeService(bknOfficeRepo)
+	bknOfficeHandler := handler.NewBKNOfficeHandler(bknOfficeService)
+
 	// 4. Setup router
 	mux := http.NewServeMux()
 
@@ -53,6 +57,11 @@ func main() {
 	// Protected Endpoints (Memerlukan Header Authorization: Bearer <token>)
 	authMiddleware := middleware.AuthMiddleware(authService)
 	mux.Handle("GET /api/v1/auth/me", authMiddleware(http.HandlerFunc(authHandler.GetProfile)))
+
+	// BKN Regional Offices Endpoints
+	mux.HandleFunc("GET /api/v1/bkn-regional-offices", bknOfficeHandler.GetOffices)
+	mux.HandleFunc("GET /api/v1/bkn-regional-offices/{id}", bknOfficeHandler.GetOfficeByID)
+	mux.Handle("POST /api/v1/bkn-regional-offices", authMiddleware(http.HandlerFunc(bknOfficeHandler.CreateOffice)))
 
 	// Institutions & Staff Endpoints
 	mux.Handle("POST /api/v1/institutions", authMiddleware(http.HandlerFunc(instHandler.CreateInstitution)))
