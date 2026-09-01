@@ -14,6 +14,7 @@ import (
 	"github.com/puspenkom-bkn/backend/internal/service"
 )
 
+// apakah aku masuk
 func main() {
 	// 1. Load configuration
 	cfg := config.Load()
