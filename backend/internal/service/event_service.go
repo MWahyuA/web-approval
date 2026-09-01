@@ -67,3 +67,61 @@ func (s *EventService) CreateSession(req model.CreateEventSessionRequest) (*mode
 	}
 	return session, nil
 }
+
+func (s *EventService) GetSessionsByEventID(eventID string) ([]model.EventSession, error) {
+	return s.repo.GetSessionsByEventID(eventID)
+}
+
+func (s *EventService) UpdateSession(sessionID string, req model.UpdateEventSessionRequest) (*model.EventSession, error) {
+	if sessionID == "" {
+		return nil, errors.New("ID sesi wajib diisi")
+	}
+
+	if req.MaxQuota <= 0 {
+		return nil, errors.New("kuota maksimal harus lebih besar dari 0")
+	}
+
+	session := &model.EventSession{
+		ID:          sessionID,
+		SessionDate: req.SessionDate,
+		MaxQuota:    req.MaxQuota,
+	}
+
+	if err := s.repo.UpdateEventSession(session); err != nil {
+		return nil, err
+	}
+
+	return session, nil
+}
+
+func (s *EventService) UpdateEvent(eventID string, req model.UpdateEventRequest) (*model.Event, error) {
+	if eventID == "" {
+		return nil, errors.New("ID event wajib diisi")
+	}
+	if req.Title == "" {
+		return nil, errors.New("judul acara tidak boleh kosong")
+	}
+
+	status := req.Status
+	if status == "" {
+		status = "DRAFT"
+	}
+
+	event := &model.Event{
+		ID:         eventID,
+		Title:      req.Title,
+		LocationID: req.LocationID,
+		StartDate:  req.StartDate,
+		EndDate:    req.EndDate,
+		StartTime:  req.StartTime,
+		Price:      req.Price,
+		Status:     status,
+	}
+
+	if err := s.repo.UpdateEvent(event); err != nil {
+		return nil, err
+	}
+
+	// Mengambil data event terbaru beserta sesi-sesinya setelah di-update
+	return s.repo.GetEventByID(eventID)
+}

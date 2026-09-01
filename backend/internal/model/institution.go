@@ -39,3 +39,10 @@ type CreateStaffRequest struct {
 	Position      string `json:"position"`
 	InstitutionID string `json:"institution_id"`
 }
+
+// UpdateStaffRequest payload JSON untuk update pegawai/ASN
+type UpdateStaffRequest struct {
+	NIP      string `json:"nip"`
+	Name     string `json:"nama"`
+	Position string `json:"position"`
+}
