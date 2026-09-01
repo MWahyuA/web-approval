@@ -88,3 +88,44 @@ func (h *EventHandler) CreateSession(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(res)
 }
+
+func (h *EventHandler) GetSessionsByEvent(w http.ResponseWriter, r *http.Request) {
+	eventID := r.PathValue("id")
+	if eventID == "" {
+		http.Error(w, "ID event wajib diisi", http.StatusBadRequest)
+		return
+	}
+
+	sessions, err := h.service.GetSessionsByEventID(eventID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(sessions)
+}
+
+func (h *EventHandler) UpdateSession(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.PathValue("sessionId")
+	if sessionID == "" {
+		http.Error(w, "ID sesi wajib diisi", http.StatusBadRequest)
+		return
+	}
+
+	var req model.UpdateEventSessionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Payload JSON tidak valid", http.StatusBadRequest)
+		return
+	}
+
+	res, err := h.service.UpdateSession(sessionID, req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
+}
+

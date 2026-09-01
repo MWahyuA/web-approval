@@ -144,3 +144,24 @@ func (r *EventRepository) GetSessionsByEventID(eventID string) ([]model.EventSes
 	}
 	return list, nil
 }
+
+func (r *EventRepository) UpdateEventSession(s *model.EventSession) error {
+	query := `
+		UPDATE event_sessions
+		SET session_date = $1, max_quota = $2
+		WHERE id = $3
+	`
+	res, err := r.db.Exec(query, s.SessionDate, s.MaxQuota, s.ID)
+
+	if err != nil {
+		return fmt.Errorf("error saat update event_session: %w", err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return fmt.Errorf("sesi tidak ditemukan")
+	}
+	return nil
+}
