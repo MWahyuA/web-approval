@@ -67,3 +67,29 @@ func (s *EventService) CreateSession(req model.CreateEventSessionRequest) (*mode
 	}
 	return session, nil
 }
+
+func (s *EventService) GetSessionsByEventID(eventID string) ([]model.EventSession, error) {
+	return s.repo.GetSessionsByEventID(eventID)
+}
+
+func (s *EventService) UpdateSession(sessionID string, req model.UpdateEventSessionRequest) (*model.EventSession, error) {
+	if sessionID == "" {
+		return nil, errors.New("ID sesi wajib diisi")
+	}
+
+	if req.MaxQuota <= 0 {
+		return nil, errors.New("kuota maksimal harus lebih besar dari 0")
+	}
+
+	session := &model.EventSession{
+		ID:          sessionID,
+		SessionDate: req.SessionDate,
+		MaxQuota:    req.MaxQuota,
+	}
+
+	if err := s.repo.UpdateEventSession(session); err != nil {
+		return nil, err
+	}
+
+	return session, nil
+}
