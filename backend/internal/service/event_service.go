@@ -28,12 +28,12 @@ func (s *EventService) CreateEvent(req model.CreateEventRequest, userID string) 
 	event := &model.Event{
 		Title:      req.Title,
 		LocationID: req.LocationID,
-		StartDate: req.StartDate,
-		EndDate:   req.EndDate,
-		StartTime: req.StartTime,
-		Price:     req.Price,
-		Status:    status,
-		CreatedBy: userID,
+		StartDate:  req.StartDate,
+		EndDate:    req.EndDate,
+		StartTime:  req.StartTime,
+		Price:      req.Price,
+		Status:     status,
+		CreatedBy:  userID,
 	}
 
 	if err := s.repo.CreateEvent(event); err != nil {

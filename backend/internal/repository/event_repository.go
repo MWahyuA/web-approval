@@ -51,6 +51,24 @@ func (r *EventRepository) GetEvents() ([]model.Event, error) {
 	if list == nil {
 		list = []model.Event{}
 	}
+
+	for i := range list {
+		sessions, _ := r.GetSessionsByEventID(list[i].ID)
+		if sessions == nil {
+			sessions = []model.EventSession{}
+		}
+		list[i].Sessions = sessions
+
+		total := 0
+		remaining := 0
+		for _, s := range sessions {
+			total += s.MaxQuota
+			remaining += s.RemainingQuota
+		}
+		list[i].TotalQuota = total
+		list[i].RemainingQuota = remaining
+	}
+
 	return list, nil
 }
 
@@ -70,7 +88,19 @@ func (r *EventRepository) GetEventByID(id string) (*model.Event, error) {
 	}
 
 	sessions, _ := r.GetSessionsByEventID(id)
+	if sessions == nil {
+		sessions = []model.EventSession{}
+	}
 	e.Sessions = sessions
+
+	total := 0
+	remaining := 0
+	for _, s := range sessions {
+		total += s.MaxQuota
+		remaining += s.RemainingQuota
+	}
+	e.TotalQuota = total
+	e.RemainingQuota = remaining
 
 	return &e, nil
 }
