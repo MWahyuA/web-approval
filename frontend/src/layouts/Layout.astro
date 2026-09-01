@@ -1,12 +1,50 @@
+---
+interface Props {
+	title?: string;
+	description?: string;
+	requireAuth?: boolean;
+	allowedRoles?: string[];
+}
+
+const {
+	title = "Puspenkom BKN — Pendaftaran Penilaian Kompetensi",
+	description = "Sistem Informasi Pendaftaran Penilaian Kompetensi ASN secara online dan paperless. Pusat Penilaian Kompetensi, Badan Kepegawaian Negara.",
+	requireAuth = false,
+	allowedRoles = [],
+} = Astro.props;
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="id">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{title}</title>
+		{requireAuth && (
+			<script is:inline define:vars={{ allowedRoles }}>
+				// Check for auth token in localStorage before the page even renders
+				const token = localStorage.getItem('token');
+				if (!token) {
+					window.location.href = '/login';
+				} else if (allowedRoles && allowedRoles.length > 0) {
+					// Check role
+					try {
+						const userString = localStorage.getItem('user');
+						const user = userString ? JSON.parse(userString) : null;
+						if (!user || !user.role || !allowedRoles.includes(user.role)) {
+							// If unauthorized, redirect to login (or an unauthorized page)
+							window.location.href = '/login';
+						}
+					} catch(e) {
+						window.location.href = '/login';
+					}
+				}
+			</script>
+		)}
 	</head>
 	<body>
 		<slot />
@@ -18,6 +56,6 @@
 	body {
 		margin: 0;
 		width: 100%;
-		height: 100%;
+		min-height: 100vh;
 	}
 </style>

@@ -418,6 +418,7 @@ erDiagram
     USERS ||--o{ LETTERS : "signs"
     INSTITUTIONS ||--o{ USERS : "has"
     INSTITUTIONS ||--o{ STAFF : "has"
+    BKN_REGIONAL_OFFICES ||--o{ EVENTS : "hosts"
     EVENTS ||--o{ EVENT_SESSIONS : "has"
     EVENT_SESSIONS ||--o{ REGISTRATION_PARTICIPANTS : "allocates"
     REGISTRATIONS ||--o{ REGISTRATION_PARTICIPANTS : "contains"
@@ -446,6 +447,13 @@ erDiagram
         timestamp created_at
     }
 
+    BKN_REGIONAL_OFFICES {
+        uuid id PK
+        string name
+        string address
+        timestamp created_at
+    }
+
     STAFF {
         uuid id PK
         string nip
@@ -458,7 +466,7 @@ erDiagram
     EVENTS {
         uuid id PK
         string title
-        string location
+        uuid location_id FK
         date start_date
         date end_date
         time start_time
@@ -557,12 +565,20 @@ erDiagram
 | institution_id | UUID          | FK → institutions   | Instansi pegawai                |
 | created_at     | TIMESTAMPTZ   | DEFAULT NOW()       |                                 |
 
+#### `bkn_regional_offices`
+| Kolom    | Tipe          | Constraint     | Keterangan                                      |
+|----------|---------------|----------------|-------------------------------------------------|
+| id       | UUID          | PK             |                                                 |
+| name     | VARCHAR(255)  | NOT NULL       | Nama kantor regional (contoh: Kanreg I BKN...)  |
+| address  | TEXT          |                | Alamat kantor regional                          |
+| created_at | TIMESTAMPTZ | DEFAULT NOW()  |                                                 |
+
 #### `events`
 | Kolom       | Tipe          | Constraint     | Keterangan                                        |
 |-------------|---------------|----------------|---------------------------------------------------|
 | id          | UUID          | PK             |                                                   |
 | title       | VARCHAR(255)  | NOT NULL       | Judul event                                       |
-| location    | VARCHAR(255)  | NOT NULL       | Lokasi pelaksanaan                                |
+| location_id | UUID          | FK → bkn_regional_offices | Referensi ke tabel lokasi BKN Regional |
 | start_date  | DATE          | NOT NULL       | Tanggal mulai                                     |
 | end_date    | DATE          | NOT NULL       | Tanggal selesai                                   |
 | start_time  | TIME          | NOT NULL       | Waktu mulai (jam)                                 |

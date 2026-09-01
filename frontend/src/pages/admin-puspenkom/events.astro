@@ -1,0 +1,16 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import DashboardLayout from "../../components/layout/DashboardLayout";
+import EventManagement from "../../components/view/EventManagement";
+import "../../styles/global.css";
+---
+
+<Layout
+    title="Kelola Event — Puspenkom BKN"
+    requireAuth={true}
+    allowedRoles={["admin_puspenkom"]}
+>
+    <DashboardLayout client:load activePath="/admin-puspenkom/events">
+        <EventManagement client:load />
+    </DashboardLayout>
+</Layout>
