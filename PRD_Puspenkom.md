@@ -668,7 +668,7 @@ erDiagram
 
 Berikut fitur-fitur yang **tidak termasuk** dalam scope rilis pertama:
 
-- Integrasi pembayaran online.
+- Integrasi pembayaran online (Upload bukti transfer manual & verifikasi akan dikembangkan di V2 - lihat Bab 10).
 - Notifikasi email / push notification (dapat ditambahkan di iterasi berikutnya).
 - Integrasi tanda tangan digital berbasis sertifikat (BSrE) — V1 menggunakan tanda tangan digital sederhana (nama, jabatan, timestamp).
 - Mobile native application.
@@ -690,6 +690,18 @@ Berikut fitur-fitur yang **tidak termasuk** dalam scope rilis pertama:
 | 7     | Testing & QA                       | 1.5 minggu      | Unit test, integration test, UAT                |
 | 8     | Deployment & Go-Live               | 1 minggu        | Server setup, deployment, monitoring            |
 |       | **Total Estimasi**                 | **~11 minggu**  |                                                 |
+
+---
+
+## 10. Future Requirements (V2)
+
+Berdasarkan tinjauan dan diskusi pengembangan, beberapa fitur strategis akan dibangun pada fase V2. Salah satu fokus utama di V2 adalah kelengkapan administrasi pasca-persetujuan:
+
+### 10.1 Modul Verifikasi Pembayaran (V2)
+Untuk mengakomodir penyelesaian administrasi PenKom berbayar (PNBP), sistem akan dikembangkan dengan alur berikut:
+1. **Upload Bukti Pembayaran (Admin Instansi):** Setelah status surat "Diterima" oleh Kepala Puspenkom (tahap akhir), Admin Instansi akan mendapatkan akses ke menu khusus untuk mengunggah berkas bukti setor/transfer bank.
+2. **Validasi Pembayaran (Admin Puspenkom):** Admin Puspenkom akan memiliki submenu baru (contoh: *Validasi Pembayaran*) untuk mengecek bukti transfer yang diunggah.
+3. **Status Penyelesaian:** Setelah divalidasi oleh bendahara/Admin Puspenkom, status pendaftaran akan berubah menjadi **"Lunas / Selesai"**, yang akan memicu keluarnya bukti kuitansi atau tanda terima digital secara otomatis.
 
 ---
 

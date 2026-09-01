@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Badge from "../ui/Badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/Table";
+import Select from "../ui/Select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "../ui/Table";
 import Modal from "../ui/Modal";
 
 // Local interface matching the API response
@@ -38,6 +39,11 @@ export default function EventManagement() {
     const [locations, setLocations] = useState<{ id: string, name: string }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [filterLoc, setFilterLoc] = useState("");
+    const [filterStatus, setFilterStatus] = useState("");
+    const [sortOrder, setSortOrder] = useState("");
 
     // Form state for creating event
     const [formData, setFormData] = useState({
@@ -108,9 +114,52 @@ export default function EventManagement() {
         fetchEventsAndLocations();
     }, []);
 
-    const filteredEvents = events.filter(e =>
-        e.title.toLowerCase().includes(search.toLowerCase())
+    const filteredEvents = events.filter(e => {
+        const matchSearch = e.title.toLowerCase().includes(search.toLowerCase());
+        const matchLoc = filterLoc ? e.location_id === filterLoc : true;
+        const matchStatus = filterStatus ? e.status === filterStatus : true;
+        return matchSearch && matchLoc && matchStatus;
+    }).sort((a, b) => {
+        if (sortOrder === "quota_desc") {
+            const getRemaining = (ev: EventData) => {
+                const max = ev.sessions ? ev.sessions.reduce((acc, curr) => acc + (curr.max_quota || 0), 0) : 0;
+                const used = ev.sessions ? ev.sessions.reduce((acc, curr) => acc + (curr.used_quota || 0), 0) : 0;
+                return max - used;
+            };
+            return getRemaining(b) - getRemaining(a);
+        }
+
+        // Strip time to only compare dates
+        const getStartOfDay = (d?: string | number | Date) => {
+            const date = d ? new Date(d) : new Date();
+            date.setHours(0, 0, 0, 0);
+            return date.getTime();
+        };
+
+        const now = getStartOfDay();
+        const startA = getStartOfDay(a.start_date);
+        const startB = getStartOfDay(b.start_date);
+
+        const diffA = Math.abs(startA - now);
+        const diffB = Math.abs(startB - now);
+
+        if (diffA === diffB) {
+            const endA = getStartOfDay(a.end_date);
+            const endB = getStartOfDay(b.end_date);
+            return Math.abs(endA - now) - Math.abs(endB - now);
+        }
+        return diffA - diffB;
+    });
+
+    const totalPages = Math.ceil(filteredEvents.length / itemsPerPage) || 1;
+    const paginatedEvents = filteredEvents.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
     );
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search, itemsPerPage, filterLoc, filterStatus, sortOrder]);
 
     const handleCloseModal = () => {
         setModalState({ isOpen: false, type: 'create', eventId: null });
@@ -208,47 +257,89 @@ export default function EventManagement() {
         <div className="flex flex-col gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Area */}
             <div>
-                <h1 className="text-2xl font-bold text-slate-900 mb-1">📅 Kelola Event Penilaian Kompetensi</h1>
-                <p className="text-sm text-slate-500">Buat, edit, dan pantau status event penilaian kompetensi.</p>
+                <h1 className="text-2xl font-bold text-slate-900 mb-1">📅 Kelola Penilaian Kompetensi</h1>
+                <p className="text-sm text-slate-500">Buat, edit, dan pantau status PenKom.</p>
             </div>
 
             {/* Actions Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <Button
-                    variant="primary"
-                    onClick={() => {
-                        setFormData({
-                            title: "",
-                            location_id: "",
-                            start_date: "",
-                            end_date: "",
-                            start_time: "",
-                            price: "",
-                            status: "active",
-                            sessions: []
-                        });
-                        setModalState({ isOpen: true, type: 'create', eventId: null });
-                    }}
-                    leftIcon={
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                    }
-                >
-                    Buat Event Baru
-                </Button>
-
-                <div className="w-full sm:w-64">
-                    <Input
-                        placeholder="Cari event..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+            <div className="flex flex-col gap-4">
+                <div className="flex">
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            setFormData({
+                                title: "",
+                                location_id: "",
+                                start_date: "",
+                                end_date: "",
+                                start_time: "",
+                                price: "",
+                                status: "active",
+                                sessions: []
+                            });
+                            setModalState({ isOpen: true, type: 'create', eventId: null });
+                        }}
                         leftIcon={
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
                         }
-                    />
+                    >
+                        Buat PenKom Baru
+                    </Button>
+                </div>
+
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-slate-50/50 p-3 rounded-xl border border-slate-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full flex-1">
+                        <Select
+                            wrapperClassName="w-full min-w-0"
+                            className="w-full h-full min-h-[44px] px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-blue text-slate-600 custom-scrollbar"
+                            value={filterLoc}
+                            onChange={e => setFilterLoc(e.target.value)}
+                        >
+                            <option value="">Semua Lokasi</option>
+                            {locations.map(l => (
+                                <option key={l.id} value={l.id}>{l.name}</option>
+                            ))}
+                        </Select>
+
+                        <Select
+                            wrapperClassName="w-full min-w-0"
+                            className="w-full h-full min-h-[44px] px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-blue text-slate-600"
+                            value={filterStatus}
+                            onChange={e => setFilterStatus(e.target.value)}
+                        >
+                            <option value="">Semua Status</option>
+                            <option value="active">Aktif</option>
+                            <option value="inactive">Tidak Aktif</option>
+                            <option value="completed">Selesai</option>
+                        </Select>
+
+                        <Select
+                            wrapperClassName="w-full min-w-0"
+                            className="w-full h-full min-h-[44px] px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-blue text-slate-600"
+                            value={sortOrder}
+                            onChange={e => setSortOrder(e.target.value)}
+                        >
+                            <option value="">Urutkan: Tanggal Terdekat</option>
+                            <option value="quota_desc">Urutkan: Kuota Sisa Terbanyak</option>
+                        </Select>
+                    </div>
+
+                    <div className="w-full lg:w-72 shrink-0 flex items-stretch">
+                        <Input
+                            wrapperClassName="w-full h-full"
+                            className="w-full h-full min-h-[44px]"
+                            placeholder="Cari PenKom..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            leftIcon={
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            }
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -257,7 +348,7 @@ export default function EventManagement() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Judul Event</TableHead>
+                            <TableHead>Judul PenKom</TableHead>
                             <TableHead>Lokasi</TableHead>
                             <TableHead>Tanggal</TableHead>
                             <TableHead>Jumlah Kuota</TableHead>
@@ -286,8 +377,8 @@ export default function EventManagement() {
                                     </TableRow>
                                 ))}
                             </>
-                        ) : filteredEvents.length > 0 ? (
-                            filteredEvents.map((event) => {
+                        ) : paginatedEvents.length > 0 ? (
+                            paginatedEvents.map((event) => {
                                 const maxQuota = event.sessions ? event.sessions.reduce((acc, curr) => acc + (curr.max_quota || 0), 0) : 0;
                                 const usedQuota = event.sessions ? event.sessions.reduce((acc, curr) => acc + (curr.used_quota || 0), 0) : 0;
                                 const remainingQuota = maxQuota - usedQuota;
@@ -356,29 +447,70 @@ export default function EventManagement() {
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={7} className="text-center py-10 text-slate-500">
-                                    Tidak ada event yang ditemukan untuk pencarian "{search}".
+                                    Tidak ada PenKom yang ditemukan untuk pencarian "{search}".
                                 </TableCell>
                             </TableRow>
                         )}
                     </TableBody>
-                </Table>
-            </div>
+                    <TableFooter>
+                        <TableRow>
+                            <TableCell colSpan={7}>
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500 w-full py-1">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-1.5 border-slate-300">
+                                            <Select
+                                                className="bg-white border border-slate-200 rounded-md px-2 py-1 text-slate-700 outline-none hover:border-slate-300 focus:border-primary-blue transition-colors cursor-pointer"
+                                                value={itemsPerPage}
+                                                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                                            >
+                                                <option value={5}>5</option>
+                                                <option value={10}>10</option>
+                                                <option value={20}>20</option>
+                                            </Select>
+                                        </div>
+                                        <p>Menampilkan {paginatedEvents.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0} - {Math.min(currentPage * itemsPerPage, filteredEvents.length)} dari {filteredEvents.length} PenKom</p>
+                                    </div>
 
-            {/* Pagination Dummies */}
-            <div className="flex items-center justify-between text-sm text-slate-500 mt-2">
-                <p>Menampilkan {filteredEvents.length} event</p>
-                <div className="flex items-center gap-2">
-                    <button className="px-3 py-1.5 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50" disabled>Sebelumnya</button>
-                    <button className="px-3 py-1.5 border border-primary-blue bg-primary-blue-light text-primary-blue font-medium rounded-md">1</button>
-                    <button className="px-3 py-1.5 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50" disabled>Selanjutnya</button>
-                </div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            className="px-3 py-1 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white"
+                                        >
+                                            Sebelumnya
+                                        </button>
+                                        {Array.from({ length: totalPages }).map((_, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => setCurrentPage(i + 1)}
+                                                className={`min-w-[32px] px-2 py-1 border rounded-md transition-colors ${currentPage === i + 1
+                                                    ? "border-primary-blue bg-primary-blue-light text-primary-blue font-medium"
+                                                    : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                                                    }`}
+                                            >
+                                                {i + 1}
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages || totalPages === 0}
+                                            className="px-3 py-1 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white"
+                                        >
+                                            Selanjutnya
+                                        </button>
+                                    </div>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    </TableFooter>
+                </Table>
             </div>
 
             {/* Dynamically Reused Modal */}
             <Modal
                 isOpen={modalState.isOpen}
                 onClose={handleCloseModal}
-                title={modalState.type === 'create' ? "📝 Buat Event Baru" : modalState.type === 'edit' ? "✏️ Edit Event" : "👁️ Detail Event"}
+                title={modalState.type === 'create' ? "📝 Buat PenKom Baru" : modalState.type === 'edit' ? "✏️ Edit PenKom" : "👁️ Detail PenKom"}
                 maxWidth="xl"
                 footer={
                     <>
@@ -387,7 +519,7 @@ export default function EventManagement() {
                         ) : (
                             <>
                                 <Button variant="ghost" onClick={handleCloseModal} disabled={isSubmitting}>Batal</Button>
-                                <Button variant="primary" onClick={handleSubmit} isLoading={isSubmitting}>
+                                <Button variant="primary" type="submit" form="create-event-form" isLoading={isSubmitting}>
                                     {modalState.type === 'create' ? "Simpan & Publikasi" : "Simpan Perubahan"}
                                 </Button>
                             </>
@@ -397,7 +529,7 @@ export default function EventManagement() {
             >
                 <form id="create-event-form" className="flex flex-col gap-5 w-full" onSubmit={handleSubmit}>
                     <Input
-                        label="Judul Event"
+                        label="Judul PenKom"
                         required
                         placeholder="Contoh: Penilaian Kompetensi Manajerial Q4"
                         value={formData.title}
@@ -407,7 +539,7 @@ export default function EventManagement() {
 
                     <div className="flex flex-col gap-1.5">
                         <label className="text-sm font-semibold text-slate-700">Lokasi <span className="text-red-500">*</span></label>
-                        <select
+                        <Select
                             required
                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/20 focus:border-primary-blue transition-all disabled:bg-slate-100 disabled:text-slate-500"
                             value={formData.location_id}
@@ -418,7 +550,7 @@ export default function EventManagement() {
                             {locations.map((loc) => (
                                 <option key={loc.id} value={loc.id}>{loc.name}</option>
                             ))}
-                        </select>
+                        </Select>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -446,6 +578,7 @@ export default function EventManagement() {
                         <Input
                             label="Waktu Mulai Tiap Harinya"
                             type="time"
+                            step="1"
                             required
                             value={formData.start_time}
                             onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
@@ -453,32 +586,24 @@ export default function EventManagement() {
                         />
                         <Input
                             label="Harga per Peserta"
-                            type="number"
-                            required
-                            min="0"
+                            type="text"
+                            inputMode="numeric"
                             placeholder="0"
-                            helperText="ℹ️ Isi 0 untuk event gratis"
+                            helperText="ℹ️ Isi 0 untuk PenKom gratis"
                             leftIcon={<span className="text-slate-400 font-medium">Rp</span>}
-                            value={formData.price}
+                            value={formData.price ? formData.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ""}
                             disabled={modalState.type === 'view'}
-                            onKeyDown={(e) => {
-                                if (e.key === '-' || e.key === 'e' || e.key === '+' || e.key === 'E') {
-                                    e.preventDefault();
-                                }
-                            }}
                             onChange={(e) => {
-                                const val = e.target.value;
-                                if (val === '' || Number(val) >= 0) {
-                                    setFormData({ ...formData, price: val });
-                                }
+                                const rawValue = e.target.value.replace(/\D/g, "");
+                                setFormData({ ...formData, price: rawValue });
                             }}
                         />
                     </div>
 
                     {modalState.type !== 'create' && (
                         <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-semibold text-slate-700">Status Event <span className="text-red-500">*</span></label>
-                            <select
+                            <label className="text-sm font-semibold text-slate-700">Status PenKom <span className="text-red-500">*</span></label>
+                            <Select
                                 required
                                 className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/20 focus:border-primary-blue transition-all disabled:bg-slate-100 disabled:text-slate-500"
                                 value={formData.status}
@@ -487,7 +612,7 @@ export default function EventManagement() {
                             >
                                 <option value="active">Aktif</option>
                                 <option value="inactive">Inaktif</option>
-                            </select>
+                            </Select>
                         </div>
                     )}
 

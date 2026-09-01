@@ -52,7 +52,7 @@ function getNavItems(role: string): NavItem[] {
     if (role === "admin_puspenkom") {
         return [
             { label: "Dashboard", href: "/admin-puspenkom/dashboard", icon: ICONS.dashboard },
-            { label: "Kelola Event", href: "/admin-puspenkom/events", icon: ICONS.event },
+            { label: "Kelola PenKom", href: "/admin-puspenkom/events", icon: ICONS.event },
             { label: "Surat Masuk", href: "/admin-puspenkom/surat", icon: ICONS.surat, badge: 5 },
             { label: "Laporan", href: "/admin-puspenkom/laporan", icon: ICONS.laporan },
         ];
@@ -65,14 +65,14 @@ function getNavItems(role: string): NavItem[] {
     } else if (role === "admin_instansi") {
         return [
             { label: "Dashboard", href: "/admin-instansi/dashboard", icon: ICONS.dashboard },
-            { label: "Event Tersedia", href: "/admin-instansi/events", icon: ICONS.event },
+            { label: "Daftar PenKom", href: "/admin-instansi/events", icon: ICONS.event },
             { label: "Pendaftaran", href: "/admin-instansi/pendaftaran", icon: ICONS.pendaftaran },
             { label: "Surat", href: "/admin-instansi/surat", icon: ICONS.surat },
         ];
     } else if (role === "kepala_instansi") {
         return [
             { label: "Dashboard", href: "/kepala-instansi/dashboard", icon: ICONS.dashboard },
-            { label: "Event Tersedia", href: "/kepala-instansi/events", icon: ICONS.event },
+            { label: "Daftar PenKom", href: "/kepala-instansi/events", icon: ICONS.event },
             { label: "Surat Pengajuan", href: "/kepala-instansi/surat", icon: ICONS.surat, badge: 2 },
         ];
     }
@@ -92,7 +92,7 @@ export default function Sidebar({ activePath = "/dashboard", collapsed = false, 
         fixed top-0 left-0 z-40
         h-screen bg-gradient-primary shadow-xl
         flex flex-col
-        transition-all duration-300 ease-in-out
+        transition-all duration-300 ease-in-out overflow-x-hidden
         ${collapsed ? "w-[72px]" : "w-[260px]"}
       `}
         >
@@ -102,7 +102,7 @@ export default function Sidebar({ activePath = "/dashboard", collapsed = false, 
             </div>
 
             {/* Nav Items */}
-            <nav className="flex-1 py-4 px-3 flex flex-col gap-1 overflow-y-auto">
+            <nav className="flex-1 py-4 px-3 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
                 {navItems.map((item) => {
                     const isActive = activePath === item.href || activePath.startsWith(item.href + "/");
                     return (
@@ -123,7 +123,7 @@ export default function Sidebar({ activePath = "/dashboard", collapsed = false, 
                         >
                             <span className="shrink-0">{item.icon}</span>
                             {!collapsed && (
-                                <span className="text-sm flex-1">{item.label}</span>
+                                <span className="text-sm flex-1 whitespace-nowrap">{item.label}</span>
                             )}
                             {!collapsed && item.badge && (
                                 <span className="bg-white text-primary-pink text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">
@@ -164,7 +164,7 @@ export default function Sidebar({ activePath = "/dashboard", collapsed = false, 
                     >
                         <path d="m11 17-5-5 5-5" /><path d="m18 17-5-5 5-5" />
                     </svg>
-                    {!collapsed && <span className="text-sm">Collapse</span>}
+                    {!collapsed && <span className="text-sm whitespace-nowrap">Collapse</span>}
                 </button>
             </div>
         </aside>

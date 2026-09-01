@@ -8,6 +8,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     rightIcon?: React.ReactNode;
     isRequired?: boolean;
     showPasswordToggle?: boolean;
+    wrapperClassName?: string;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -22,7 +23,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             showPasswordToggle = false,
             type = "text",
             className = "",
+            wrapperClassName = "",
             id,
+            required,
             ...props
         },
         ref
@@ -33,15 +36,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         const resolvedType = isPassword && showPassword ? "text" : type;
 
         return (
-            <div className="flex flex-col gap-1.5">
+            <div className={`flex flex-col gap-1.5 ${wrapperClassName}`}>
                 {/* Label */}
                 {label && (
                     <label
                         htmlFor={inputId}
-                        className="text-sm font-medium text-slate-700"
+                        className="text-sm font-semibold text-slate-700"
                     >
                         {label}
-                        {isRequired && <span className="text-error ml-0.5">*</span>}
+                        {(isRequired || required) && <span className="text-red-500 ml-1">*</span>}
                     </label>
                 )}
 
@@ -62,7 +65,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               w-full rounded-lg border bg-white
               text-sm text-slate-900 placeholder:text-slate-400
               transition-all duration-200 ease-in-out
-              focus:outline-none
+              focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200
               ${leftIcon ? "pl-10" : "pl-4"}
               ${isPassword && showPasswordToggle || rightIcon ? "pr-10" : "pr-4"}
               py-3
@@ -73,6 +76,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               ${className}
             `}
                         aria-invalid={!!error}
+                        required={required}
                         aria-describedby={
                             error
                                 ? `${inputId}-error`

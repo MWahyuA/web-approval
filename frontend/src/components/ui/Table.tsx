@@ -65,4 +65,15 @@ const TableCell = forwardRef<HTMLTableCellElement, TdHTMLAttributes<HTMLTableCel
 );
 TableCell.displayName = 'TableCell';
 
-export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell };
+const TableFooter = forwardRef<HTMLTableSectionElement, HTMLAttributes<HTMLTableSectionElement>>(
+    ({ className, ...props }, ref) => (
+        <tfoot
+            ref={ref}
+            className={`bg-slate-50/50 border-t border-slate-200 font-medium ${className || ''}`}
+            {...props}
+        />
+    )
+);
+TableFooter.displayName = 'TableFooter';
+
+export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell, TableFooter };
