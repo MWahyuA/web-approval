@@ -85,6 +85,9 @@ func main() {
 	// 3. PUT: Edit sesi yang sudah ada berdasarkan sessionId (Butuh Login / Admin)
 	mux.Handle("PUT /api/v1/sessions/{sessionId}", authMiddleware(http.HandlerFunc(eventHandler.UpdateSession)))
 
+	// 4. PUT: Edit event yang sudah ada berdasarkan eventId (Butuh Login / Admin)
+	mux.Handle("PUT /api/v1/events/{eventId}", authMiddleware(http.HandlerFunc(eventHandler.UpdateEvent)))
+
 	// 5. Apply middleware
 	stack := middleware.Chain(
 		middleware.Logger,

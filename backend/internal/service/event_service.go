@@ -93,3 +93,35 @@ func (s *EventService) UpdateSession(sessionID string, req model.UpdateEventSess
 
 	return session, nil
 }
+
+func (s *EventService) UpdateEvent(eventID string, req model.UpdateEventRequest) (*model.Event, error) {
+	if eventID == "" {
+		return nil, errors.New("ID event wajib diisi")
+	}
+	if req.Title == "" {
+		return nil, errors.New("judul acara tidak boleh kosong")
+	}
+
+	status := req.Status
+	if status == "" {
+		status = "DRAFT"
+	}
+
+	event := &model.Event{
+		ID:         eventID,
+		Title:      req.Title,
+		LocationID: req.LocationID,
+		StartDate:  req.StartDate,
+		EndDate:    req.EndDate,
+		StartTime:  req.StartTime,
+		Price:      req.Price,
+		Status:     status,
+	}
+
+	if err := s.repo.UpdateEvent(event); err != nil {
+		return nil, err
+	}
+
+	// Mengambil data event terbaru beserta sesi-sesinya setelah di-update
+	return s.repo.GetEventByID(eventID)
+}

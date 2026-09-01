@@ -165,3 +165,30 @@ func (r *EventRepository) UpdateEventSession(s *model.EventSession) error {
 	}
 	return nil
 }
+
+func (r *EventRepository) UpdateEvent(e *model.Event) error {
+	query := `
+		UPDATE events
+		SET title = $1,
+		    location_id = NULLIF($2, '')::uuid,
+		    start_date = $3,
+		    end_date = $4,
+		    start_time = $5,
+		    price = $6,
+		    status = $7::event_status
+		WHERE id = $8
+	`
+	res, err := r.db.Exec(query, e.Title, e.LocationID, e.StartDate, e.EndDate, e.StartTime, e.Price, e.Status, e.ID)
+	if err != nil {
+		return fmt.Errorf("error saat update event: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return fmt.Errorf("event tidak ditemukan")
+	}
+	return nil
+}
