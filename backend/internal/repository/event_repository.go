@@ -151,7 +151,8 @@ func (r *EventRepository) UpdateEventSession(s *model.EventSession) error {
 		SET session_date = $1, max_quota = $2
 		WHERE id = $3
 	`
-	res, err := r.db.Exec(query, s.SessionDate, s.maxQuota, s.ID)
+	res, err := r.db.Exec(query, s.SessionDate, s.MaxQuota, s.ID)
+
 	if err != nil {
 		return fmt.Errorf("error saat update event_session: %w", err)
 	}
