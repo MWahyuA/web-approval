@@ -49,3 +49,14 @@ type UpdateEventSessionRequest struct {
 	SessionDate string `json:"session_date"`
 	MaxQuota    int    `json:"max_quota"`
 }
+
+// UpdateEventRequest payload JSON untuk mengedit data acara penilaian
+type UpdateEventRequest struct {
+	Title      string  `json:"title"`
+	LocationID string  `json:"location_id"`
+	StartDate  string  `json:"start_date"`
+	EndDate    string  `json:"end_date"`
+	StartTime  string  `json:"start_time"`
+	Price      float64 `json:"price"`
+	Status     string  `json:"status"` // 'DRAFT', 'PUBLISHED', 'CLOSED', atau 'active'
+}

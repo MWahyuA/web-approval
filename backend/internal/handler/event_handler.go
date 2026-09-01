@@ -129,3 +129,30 @@ func (h *EventHandler) UpdateSession(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
+func (h *EventHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
+	// Ambil eventId dari URL parameter
+	eventID := r.PathValue("eventId")
+	if eventID == "" {
+		eventID = r.PathValue("id")
+	}
+
+	if eventID == "" {
+		http.Error(w, "ID event wajib diisi", http.StatusBadRequest)
+		return
+	}
+
+	var req model.UpdateEventRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Payload JSON tidak valid", http.StatusBadRequest)
+		return
+	}
+
+	res, err := h.service.UpdateEvent(eventID, req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
+}
