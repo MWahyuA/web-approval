@@ -144,3 +144,51 @@ func (r *EventRepository) GetSessionsByEventID(eventID string) ([]model.EventSes
 	}
 	return list, nil
 }
+
+func (r *EventRepository) UpdateEventSession(s *model.EventSession) error {
+	query := `
+		UPDATE event_sessions
+		SET session_date = $1, max_quota = $2
+		WHERE id = $3
+	`
+	res, err := r.db.Exec(query, s.SessionDate, s.MaxQuota, s.ID)
+
+	if err != nil {
+		return fmt.Errorf("error saat update event_session: %w", err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return fmt.Errorf("sesi tidak ditemukan")
+	}
+	return nil
+}
+
+func (r *EventRepository) UpdateEvent(e *model.Event) error {
+	query := `
+		UPDATE events
+		SET title = $1,
+		    location_id = NULLIF($2, '')::uuid,
+		    start_date = $3,
+		    end_date = $4,
+		    start_time = $5,
+		    price = $6,
+		    status = $7::event_status
+		WHERE id = $8
+	`
+	res, err := r.db.Exec(query, e.Title, e.LocationID, e.StartDate, e.EndDate, e.StartTime, e.Price, e.Status, e.ID)
+	if err != nil {
+		return fmt.Errorf("error saat update event: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return fmt.Errorf("event tidak ditemukan")
+	}
+	return nil
+}
