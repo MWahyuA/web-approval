@@ -51,6 +51,8 @@ export default function LoginForm() {
             // Redirect sesuai role
             if (data.user && data.user.role === "admin_puspenkom") {
                 window.location.href = "/admin-puspenkom/dashboard";
+            } else if (data.user && data.user.role === "admin_instansi") {
+                window.location.href = "/admin-instansi/dashboard";
             } else {
                 window.location.href = "/"; // Default for now
             }
