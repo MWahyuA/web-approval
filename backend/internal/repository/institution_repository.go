@@ -98,3 +98,105 @@ func (r *InstitutionRepository) GetStaffByInstitutionID(institutionID string) ([
 	}
 	return list, nil
 }
+
+// GetStaffByID mengambil data 1 staf berdasarkan ID
+func (r *InstitutionRepository) GetStaffByID(id string) (*model.Staff, error) {
+	query := `SELECT id, nip, name, COALESCE(position, ''), institution_id, created_at FROM staff WHERE id = $1`
+	var s model.Staff
+	err := r.db.QueryRow(query, id).Scan(&s.ID, &s.NIP, &s.Name, &s.Position, &s.InstitutionID, &s.CreatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("staff tidak ditemukan: %w", err)
+		}
+		return nil, err
+	}
+	return &s, nil
+}
+
+// UpdateStaff mengedit data NIP, Nama, dan Jabatan staf
+func (r *InstitutionRepository) UpdateStaff(s *model.Staff) error {
+	query := `
+		UPDATE staff
+		SET nip = $1,
+		    name = $2,
+		    position = $3
+		WHERE id = $4
+	`
+	res, err := r.db.Exec(query, s.NIP, s.Name, s.Position, s.ID)
+	if err != nil {
+		return fmt.Errorf("error saat update staff: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return fmt.Errorf("staff tidak ditemukan")
+	}
+	return nil
+}
+
+// DeleteStaff menghapus data staf berdasarkan ID
+func (r *InstitutionRepository) DeleteStaff(id string) error {
+	query := `DELETE FROM staff WHERE id = $1`
+	res, err := r.db.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("error saat delete staff: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return fmt.Errorf("staff tidak ditemukan")
+	}
+	return nil
+}
+
+// UpdateInstitution mengedit data instansi berdasarkan ID
+func (r *InstitutionRepository) UpdateInstitution(inst *model.Institution) error {
+	query := `
+		UPDATE institutions
+		SET name = $1,
+		    code = $2,
+		    address = $3,
+		    letterhead_data = CASE WHEN $4 = '' THEN NULL ELSE $4::jsonb END,
+		    letter_number_format = $5
+		WHERE id = $6
+	`
+
+	res, err := r.db.Exec(query, inst.Name, inst.Code, inst.Address, inst.LetterheadData, inst.LetterNumberFormat, inst.ID)
+	if err != nil {
+		return fmt.Errorf("error saat update institution: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return fmt.Errorf("instansi tidak ditemukan")
+	}
+	return nil
+}
+
+// DeleteInstitution menghapus data instansi berdasarkan ID
+func (r *InstitutionRepository) DeleteInstitution(id string) error {
+	query := `DELETE FROM institutions WHERE id = $1`
+	res, err := r.db.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("error saat delete institution: %w", err)
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return fmt.Errorf("instansi tidak ditemukan")
+	}
+	return nil
+}
