@@ -443,10 +443,10 @@
 │  [Sidebar]   │   [Content Area]                                 │
 │              │                                                   │
 │  Dashboard   │   Breadcrumb: Dashboard > Event > Detail         │
-│  Event       │                                                   │
-│  Pendaftaran │   ┌─────────────────────────────────────────┐   │
-│  Surat       │   │                                         │   │
-│  Laporan     │   │         Main Content                    │   │
+│  Katalog PenKom │   ┌─────────────────────────────────────────┐   │
+│  Kelola Staff│   │                                         │   │
+│  Surat       │   │         Main Content                    │   │
+│  Laporan     │   │                                         │   │
 │  Profil      │   │                                         │   │
 │              │   └─────────────────────────────────────────┘   │
 │              │                                                   │
@@ -750,10 +750,10 @@
 ├──────────┬───────────────────────────────────────────────────────┤
 │          │ 👋 Selamat Datang, Admin Kemenkumham                 │
 │ Dashboard│                                                       │
-│ Event    │ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
-│ Tersedia │ │    2     │ │    24    │ │    1     │ │    1     │ │
-│ Penda-   │ │Pendaf-   │ │Peserta   │ │Surat     │ │Surat     │ │
-│ ftaran   │ │taran     │ │Terdaftar │ │Diterima  │ │Proses    │ │
+│ Katalog  │ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
+│ PenKom   │ │    2     │ │    24    │ │    1     │ │    1     │ │
+│ Kelola   │ │Pendaf-   │ │Peserta   │ │Surat     │ │Surat     │ │
+│ Staff    │ │taran     │ │Terdaftar │ │Diterima  │ │Proses    │ │
 │ Surat    │ │Aktif     │ │          │ │          │ │          │ │
 │ Profil   │ └──────────┘ └──────────┘ └──────────┘ └──────────┘ │
 │          │                                                       │
@@ -776,13 +776,13 @@
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### 6. Daftar Event Tersedia (US-02)
+### 6. Daftar Event Tersedia (Katalog PenKom - US-02)
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │ [Header]                                                         │
 ├──────────┬───────────────────────────────────────────────────────┤
-│          │ 📅 Event Penilaian Kompetensi Tersedia               │
+│          │ 📅 Katalog PenKom                                     │
 │ [Sidebar]│                                                       │
 │          │ 🔍 [Cari event...] [Lokasi: Semua ▼] [Bulan: Semua ▼]│
 │          │                                                       │
