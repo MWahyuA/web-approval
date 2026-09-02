@@ -1,0 +1,16 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import DashboardLayout from "../../components/layout/DashboardLayout";
+import DashboardAdminInstansi from "../../components/view/DashboardAdminInstansi";
+import "../../styles/global.css";
+---
+
+<Layout
+    title="Dashboard Admin Instansi — BKN"
+    requireAuth={true}
+    allowedRoles={["admin_instansi"]}
+>
+    <DashboardLayout client:load activePath="/admin-instansi/dashboard">
+        <DashboardAdminInstansi client:load />
+    </DashboardLayout>
+</Layout>

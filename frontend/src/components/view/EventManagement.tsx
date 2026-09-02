@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Badge from "../ui/Badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/Table";
+import Select from "../ui/Select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "../ui/Table";
 import Modal from "../ui/Modal";
 
 // Local interface matching the API response
@@ -29,11 +30,20 @@ interface EventData {
 
 export default function EventManagement() {
     const [search, setSearch] = useState("");
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [modalState, setModalState] = useState<{
+        isOpen: boolean;
+        type: 'create' | 'edit' | 'view';
+        eventId: string | null;
+    }>({ isOpen: false, type: 'create', eventId: null });
     const [events, setEvents] = useState<EventData[]>([]);
     const [locations, setLocations] = useState<{ id: string, name: string }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [filterLoc, setFilterLoc] = useState("");
+    const [filterStatus, setFilterStatus] = useState("");
+    const [sortOrder, setSortOrder] = useState("");
 
     // Form state for creating event
     const [formData, setFormData] = useState({
@@ -44,7 +54,7 @@ export default function EventManagement() {
         start_time: "",
         price: "",
         status: "active",
-        sessions: [] as { date: string; max_quota: string }[]
+        sessions: [] as { id?: string; date: string; max_quota: string }[]
     });
 
     useEffect(() => {
@@ -52,12 +62,13 @@ export default function EventManagement() {
             const startDate = new Date(formData.start_date);
             const endDate = new Date(formData.end_date);
             if (startDate <= endDate) {
-                const newSessions: { date: string; max_quota: string }[] = [];
+                const newSessions: { id?: string; date: string; max_quota: string }[] = [];
                 let current = new Date(startDate);
                 while (current <= endDate) {
                     const dateStr = current.toISOString().split('T')[0];
                     const existing = formData.sessions.find(s => s.date === dateStr);
                     newSessions.push({
+                        id: existing ? existing.id : undefined,
                         date: dateStr,
                         max_quota: existing ? existing.max_quota : ""
                     });
@@ -103,12 +114,55 @@ export default function EventManagement() {
         fetchEventsAndLocations();
     }, []);
 
-    const filteredEvents = events.filter(e =>
-        e.title.toLowerCase().includes(search.toLowerCase())
+    const filteredEvents = events.filter(e => {
+        const matchSearch = e.title.toLowerCase().includes(search.toLowerCase());
+        const matchLoc = filterLoc ? e.location_id === filterLoc : true;
+        const matchStatus = filterStatus ? e.status === filterStatus : true;
+        return matchSearch && matchLoc && matchStatus;
+    }).sort((a, b) => {
+        if (sortOrder === "quota_desc") {
+            const getRemaining = (ev: EventData) => {
+                const max = ev.sessions ? ev.sessions.reduce((acc, curr) => acc + (curr.max_quota || 0), 0) : 0;
+                const used = ev.sessions ? ev.sessions.reduce((acc, curr) => acc + (curr.used_quota || 0), 0) : 0;
+                return max - used;
+            };
+            return getRemaining(b) - getRemaining(a);
+        }
+
+        // Strip time to only compare dates
+        const getStartOfDay = (d?: string | number | Date) => {
+            const date = d ? new Date(d) : new Date();
+            date.setHours(0, 0, 0, 0);
+            return date.getTime();
+        };
+
+        const now = getStartOfDay();
+        const startA = getStartOfDay(a.start_date);
+        const startB = getStartOfDay(b.start_date);
+
+        const diffA = Math.abs(startA - now);
+        const diffB = Math.abs(startB - now);
+
+        if (diffA === diffB) {
+            const endA = getStartOfDay(a.end_date);
+            const endB = getStartOfDay(b.end_date);
+            return Math.abs(endA - now) - Math.abs(endB - now);
+        }
+        return diffA - diffB;
+    });
+
+    const totalPages = Math.ceil(filteredEvents.length / itemsPerPage) || 1;
+    const paginatedEvents = filteredEvents.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
     );
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search, itemsPerPage, filterLoc, filterStatus, sortOrder]);
+
     const handleCloseModal = () => {
-        setIsCreateModalOpen(false);
+        setModalState({ isOpen: false, type: 'create', eventId: null });
         setFormData({
             title: "",
             location_id: "",
@@ -121,13 +175,19 @@ export default function EventManagement() {
         });
     };
 
-    const handleCreateSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (modalState.type === 'view') return;
         setIsSubmitting(true);
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch("http://localhost:8080/api/v1/events", {
-                method: "POST",
+            const url = modalState.type === 'edit'
+                ? `http://localhost:8080/api/v1/events/${modalState.eventId}`
+                : "http://localhost:8080/api/v1/events";
+            const method = modalState.type === 'edit' ? "PUT" : "POST";
+
+            const res = await fetch(url, {
+                method: method,
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
@@ -144,19 +204,33 @@ export default function EventManagement() {
             });
 
             if (res.ok) {
-                const createdEvent = await res.json();
+                const savedEvent = await res.json();
+                const targetEventId = modalState.type === 'create' ? savedEvent.id : modalState.eventId;
 
                 // Create sessions
                 if (formData.sessions.length > 0) {
                     const sessionPromises = formData.sessions.map(sess => {
-                        return fetch(`http://localhost:8080/api/v1/events/${createdEvent.id}/sessions`, {
+                        if (modalState.type === 'edit' && sess.id) {
+                            return fetch(`http://localhost:8080/api/v1/sessions/${sess.id}`, {
+                                method: "PUT",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${token}`
+                                },
+                                body: JSON.stringify({
+                                    session_date: sess.date,
+                                    max_quota: parseInt(sess.max_quota) || 0
+                                })
+                            });
+                        }
+                        return fetch(`http://localhost:8080/api/v1/events/${targetEventId}/sessions`, {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
                                 "Authorization": `Bearer ${token}`
                             },
                             body: JSON.stringify({
-                                event_id: createdEvent.id,
+                                event_id: targetEventId,
                                 session_date: sess.date,
                                 max_quota: parseInt(sess.max_quota) || 0
                             })
@@ -183,35 +257,89 @@ export default function EventManagement() {
         <div className="flex flex-col gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Area */}
             <div>
-                <h1 className="text-2xl font-bold text-slate-900 mb-1">📅 Kelola Event Penilaian Kompetensi</h1>
-                <p className="text-sm text-slate-500">Buat, edit, dan pantau status event penilaian kompetensi.</p>
+                <h1 className="text-2xl font-bold text-slate-900 mb-1">📅 Kelola Penilaian Kompetensi</h1>
+                <p className="text-sm text-slate-500">Buat, edit, dan pantau status PenKom.</p>
             </div>
 
             {/* Actions Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <Button
-                    variant="primary"
-                    onClick={() => setIsCreateModalOpen(true)}
-                    leftIcon={
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                    }
-                >
-                    Buat Event Baru
-                </Button>
-
-                <div className="w-full sm:w-64">
-                    <Input
-                        placeholder="Cari event..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+            <div className="flex flex-col gap-4">
+                <div className="flex">
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            setFormData({
+                                title: "",
+                                location_id: "",
+                                start_date: "",
+                                end_date: "",
+                                start_time: "",
+                                price: "",
+                                status: "active",
+                                sessions: []
+                            });
+                            setModalState({ isOpen: true, type: 'create', eventId: null });
+                        }}
                         leftIcon={
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
                         }
-                    />
+                    >
+                        Buat PenKom Baru
+                    </Button>
+                </div>
+
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-slate-50/50 p-3 rounded-xl border border-slate-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full flex-1">
+                        <Select
+                            wrapperClassName="w-full min-w-0"
+                            className="w-full h-full min-h-[44px] px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-blue text-slate-600 custom-scrollbar"
+                            value={filterLoc}
+                            onChange={e => setFilterLoc(e.target.value)}
+                        >
+                            <option value="">Semua Lokasi</option>
+                            {locations.map(l => (
+                                <option key={l.id} value={l.id}>{l.name}</option>
+                            ))}
+                        </Select>
+
+                        <Select
+                            wrapperClassName="w-full min-w-0"
+                            className="w-full h-full min-h-[44px] px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-blue text-slate-600"
+                            value={filterStatus}
+                            onChange={e => setFilterStatus(e.target.value)}
+                        >
+                            <option value="">Semua Status</option>
+                            <option value="active">Aktif</option>
+                            <option value="inactive">Tidak Aktif</option>
+                            <option value="completed">Selesai</option>
+                        </Select>
+
+                        <Select
+                            wrapperClassName="w-full min-w-0"
+                            className="w-full h-full min-h-[44px] px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-blue text-slate-600"
+                            value={sortOrder}
+                            onChange={e => setSortOrder(e.target.value)}
+                        >
+                            <option value="">Urutkan: Tanggal Terdekat</option>
+                            <option value="quota_desc">Urutkan: Kuota Sisa Terbanyak</option>
+                        </Select>
+                    </div>
+
+                    <div className="w-full lg:w-72 shrink-0 flex items-stretch">
+                        <Input
+                            wrapperClassName="w-full h-full"
+                            className="w-full h-full min-h-[44px]"
+                            placeholder="Cari PenKom..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            leftIcon={
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            }
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -220,7 +348,7 @@ export default function EventManagement() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Judul Event</TableHead>
+                            <TableHead>Judul PenKom</TableHead>
                             <TableHead>Lokasi</TableHead>
                             <TableHead>Tanggal</TableHead>
                             <TableHead>Jumlah Kuota</TableHead>
@@ -249,8 +377,8 @@ export default function EventManagement() {
                                     </TableRow>
                                 ))}
                             </>
-                        ) : filteredEvents.length > 0 ? (
-                            filteredEvents.map((event) => {
+                        ) : paginatedEvents.length > 0 ? (
+                            paginatedEvents.map((event) => {
                                 const maxQuota = event.sessions ? event.sessions.reduce((acc, curr) => acc + (curr.max_quota || 0), 0) : 0;
                                 const usedQuota = event.sessions ? event.sessions.reduce((acc, curr) => acc + (curr.used_quota || 0), 0) : 0;
                                 const remainingQuota = maxQuota - usedQuota;
@@ -281,10 +409,34 @@ export default function EventManagement() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center justify-center gap-2">
-                                                <button className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm" title="Lihat">
+                                                <button className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm" title="Lihat" onClick={() => {
+                                                    setFormData({
+                                                        title: event.title,
+                                                        location_id: event.location_id,
+                                                        start_date: event.start_date.split('T')[0],
+                                                        end_date: event.end_date.split('T')[0],
+                                                        start_time: event.start_time,
+                                                        price: event.price.toString(),
+                                                        status: event.status,
+                                                        sessions: (event.sessions || []).map(s => ({ id: s.id, date: s.session_date.split('T')[0], max_quota: s.max_quota.toString() }))
+                                                    });
+                                                    setModalState({ isOpen: true, type: 'view', eventId: event.id });
+                                                }}>
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                                 </button>
-                                                <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-colors shadow-sm" title="Edit">
+                                                <button className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-colors shadow-sm" title="Edit" onClick={() => {
+                                                    setFormData({
+                                                        title: event.title,
+                                                        location_id: event.location_id,
+                                                        start_date: event.start_date.split('T')[0],
+                                                        end_date: event.end_date.split('T')[0],
+                                                        start_time: event.start_time,
+                                                        price: event.price.toString(),
+                                                        status: event.status,
+                                                        sessions: (event.sessions || []).map(s => ({ id: s.id, date: s.session_date.split('T')[0], max_quota: s.max_quota.toString() }))
+                                                    });
+                                                    setModalState({ isOpen: true, type: 'edit', eventId: event.id });
+                                                }}>
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
                                                 </button>
                                             </div>
@@ -295,63 +447,110 @@ export default function EventManagement() {
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={7} className="text-center py-10 text-slate-500">
-                                    Tidak ada event yang ditemukan untuk pencarian "{search}".
+                                    Tidak ada PenKom yang ditemukan untuk pencarian "{search}".
                                 </TableCell>
                             </TableRow>
                         )}
                     </TableBody>
+                    <TableFooter>
+                        <TableRow>
+                            <TableCell colSpan={7}>
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500 w-full py-1">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-1.5 border-slate-300">
+                                            <Select
+                                                className="bg-white border border-slate-200 rounded-md px-2 py-1 text-slate-700 outline-none hover:border-slate-300 focus:border-primary-blue transition-colors cursor-pointer"
+                                                value={itemsPerPage}
+                                                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                                            >
+                                                <option value={5}>5</option>
+                                                <option value={10}>10</option>
+                                                <option value={20}>20</option>
+                                            </Select>
+                                        </div>
+                                        <p>Menampilkan {paginatedEvents.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0} - {Math.min(currentPage * itemsPerPage, filteredEvents.length)} dari {filteredEvents.length} PenKom</p>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            className="px-3 py-1 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white"
+                                        >
+                                            Sebelumnya
+                                        </button>
+                                        {Array.from({ length: totalPages }).map((_, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => setCurrentPage(i + 1)}
+                                                className={`min-w-[32px] px-2 py-1 border rounded-md transition-colors ${currentPage === i + 1
+                                                    ? "border-primary-blue bg-primary-blue-light text-primary-blue font-medium"
+                                                    : "border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                                                    }`}
+                                            >
+                                                {i + 1}
+                                            </button>
+                                        ))}
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages || totalPages === 0}
+                                            className="px-3 py-1 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-white"
+                                        >
+                                            Selanjutnya
+                                        </button>
+                                    </div>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    </TableFooter>
                 </Table>
             </div>
 
-            {/* Pagination Dummies */}
-            <div className="flex items-center justify-between text-sm text-slate-500 mt-2">
-                <p>Menampilkan {filteredEvents.length} event</p>
-                <div className="flex items-center gap-2">
-                    <button className="px-3 py-1.5 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50" disabled>Sebelumnya</button>
-                    <button className="px-3 py-1.5 border border-primary-blue bg-primary-blue-light text-primary-blue font-medium rounded-md">1</button>
-                    <button className="px-3 py-1.5 border border-slate-200 rounded-md hover:bg-slate-50 transition-colors disabled:opacity-50" disabled>Selanjutnya</button>
-                </div>
-            </div>
-
-            {/* Create Event Modal */}
+            {/* Dynamically Reused Modal */}
             <Modal
-                isOpen={isCreateModalOpen}
+                isOpen={modalState.isOpen}
                 onClose={handleCloseModal}
-                title="📝 Buat Event Baru"
+                title={modalState.type === 'create' ? "📝 Buat PenKom Baru" : modalState.type === 'edit' ? "✏️ Edit PenKom" : "👁️ Detail PenKom"}
                 maxWidth="xl"
                 footer={
                     <>
-                        <Button variant="ghost" onClick={handleCloseModal} disabled={isSubmitting}>
-                            Batal
-                        </Button>
-                        <Button variant="primary" onClick={handleCreateSubmit} isLoading={isSubmitting}>
-                            Simpan & Publikasi
-                        </Button>
+                        {modalState.type === 'view' ? (
+                            <Button variant="ghost" onClick={handleCloseModal}>Tutup</Button>
+                        ) : (
+                            <>
+                                <Button variant="ghost" onClick={handleCloseModal} disabled={isSubmitting}>Batal</Button>
+                                <Button variant="primary" type="submit" form="create-event-form" isLoading={isSubmitting}>
+                                    {modalState.type === 'create' ? "Simpan & Publikasi" : "Simpan Perubahan"}
+                                </Button>
+                            </>
+                        )}
                     </>
                 }
             >
-                <form id="create-event-form" className="flex flex-col gap-5 w-full" onSubmit={handleCreateSubmit}>
+                <form id="create-event-form" className="flex flex-col gap-5 w-full" onSubmit={handleSubmit}>
                     <Input
-                        label="Judul Event"
+                        label="Judul PenKom"
                         required
                         placeholder="Contoh: Penilaian Kompetensi Manajerial Q4"
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        disabled={modalState.type === 'view'}
                     />
 
                     <div className="flex flex-col gap-1.5">
                         <label className="text-sm font-semibold text-slate-700">Lokasi <span className="text-red-500">*</span></label>
-                        <select
+                        <Select
                             required
-                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/20 focus:border-primary-blue transition-all"
+                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/20 focus:border-primary-blue transition-all disabled:bg-slate-100 disabled:text-slate-500"
                             value={formData.location_id}
                             onChange={(e) => setFormData({ ...formData, location_id: e.target.value })}
+                            disabled={modalState.type === 'view'}
                         >
                             <option value="" disabled>Pilih Lokasi Kantor Regional BKN</option>
                             {locations.map((loc) => (
                                 <option key={loc.id} value={loc.id}>{loc.name}</option>
                             ))}
-                        </select>
+                        </Select>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -359,17 +558,19 @@ export default function EventManagement() {
                             label="Tanggal Mulai"
                             type="date"
                             required
-                            min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]}
+                            min={modalState.type === 'create' ? new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0] : undefined}
                             value={formData.start_date}
                             onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                            disabled={modalState.type === 'view'}
                         />
                         <Input
                             label="Tanggal Selesai"
                             type="date"
                             required
-                            min={formData.start_date || new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]}
+                            min={modalState.type === 'create' ? (formData.start_date || new Date().toISOString().split('T')[0]) : undefined}
                             value={formData.end_date}
                             onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                            disabled={modalState.type === 'view'}
                         />
                     </div>
 
@@ -377,21 +578,43 @@ export default function EventManagement() {
                         <Input
                             label="Waktu Mulai Tiap Harinya"
                             type="time"
+                            step="1"
                             required
                             value={formData.start_time}
                             onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                            disabled={modalState.type === 'view'}
                         />
                         <Input
                             label="Harga per Peserta"
-                            type="number"
-                            required
+                            type="text"
+                            inputMode="numeric"
                             placeholder="0"
-                            helperText="ℹ️ Isi 0 untuk event gratis"
+                            helperText="ℹ️ Isi 0 untuk PenKom gratis"
                             leftIcon={<span className="text-slate-400 font-medium">Rp</span>}
-                            value={formData.price}
-                            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                            value={formData.price ? formData.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ""}
+                            disabled={modalState.type === 'view'}
+                            onChange={(e) => {
+                                const rawValue = e.target.value.replace(/\D/g, "");
+                                setFormData({ ...formData, price: rawValue });
+                            }}
                         />
                     </div>
+
+                    {modalState.type !== 'create' && (
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-semibold text-slate-700">Status PenKom <span className="text-red-500">*</span></label>
+                            <Select
+                                required
+                                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-blue/20 focus:border-primary-blue transition-all disabled:bg-slate-100 disabled:text-slate-500"
+                                value={formData.status}
+                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                disabled={modalState.type === 'view'}
+                            >
+                                <option value="active">Aktif</option>
+                                <option value="inactive">Inaktif</option>
+                            </Select>
+                        </div>
+                    )}
 
                     {/* Dynamic Session Quotas */}
                     {formData.sessions.length > 0 && (
@@ -410,13 +633,23 @@ export default function EventManagement() {
                                         <div className="flex items-center gap-2">
                                             <input
                                                 type="number"
+                                                min="0"
                                                 placeholder="Kuota..."
-                                                className="w-24 px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-blue"
+                                                className="w-24 px-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-blue disabled:bg-slate-100 disabled:text-slate-500"
                                                 value={session.max_quota}
+                                                disabled={modalState.type === 'view'}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === '-' || e.key === 'e' || e.key === '+' || e.key === 'E') {
+                                                        e.preventDefault();
+                                                    }
+                                                }}
                                                 onChange={(e) => {
-                                                    const newSessions = [...formData.sessions];
-                                                    newSessions[index].max_quota = e.target.value;
-                                                    setFormData({ ...formData, sessions: newSessions });
+                                                    const val = e.target.value;
+                                                    if (val === '' || Number(val) >= 0) {
+                                                        const newSessions = [...formData.sessions];
+                                                        newSessions[index].max_quota = val;
+                                                        setFormData({ ...formData, sessions: newSessions });
+                                                    }
                                                 }}
                                                 required
                                             />

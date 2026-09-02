@@ -1,4 +1,4 @@
-﻿# Product Requirements Document (PRD)
+# Product Requirements Document (PRD)
 # Website Pendaftaran Penilaian Kompetensi — Puspenkom BKN
 
 | Field           | Detail                                              |
@@ -51,9 +51,9 @@ Membangun **Sistem Informasi Pendaftaran Penilaian Kompetensi berbasis web** yan
 | Fitur                        | Admin Puspenkom | Kepala Puspenkom | Admin Instansi | Kepala Instansi |
 |------------------------------|:---:|:---:|:---:|:---:|
 | Kelola Event (CRUD)          | ✅  | ❌  | ❌  | ❌  |
-| Lihat Daftar Event           | ✅  | ✅  | ✅  | ✅  |
-| Daftarkan Peserta            | ❌  | ❌  | ✅  | ❌  |
-| Upload Excel Peserta         | ❌  | ❌  | ✅  | ❌  |
+| Lihat Katalog PenKom         | ✅  | ✅  | ✅  | ✅  |
+| Kelola Data Staff (CRUD/Excel)| ❌  | ❌  | ✅  | ❌  |
+| Daftarkan Staf ke Event      | ❌  | ❌  | ✅  | ❌  |
 | Bagi Jadwal Peserta          | ❌  | ❌  | ✅  | ❌  |
 | Generate Surat               | ❌  | ❌  | ✅  | ❌  |
 | Review & TTD Surat (Instansi)| ❌  | ❌  | ❌  | ✅  |
@@ -90,37 +90,39 @@ Membangun **Sistem Informasi Pendaftaran Penilaian Kompetensi berbasis web** yan
 
 ---
 
-### 3.2 Pendaftaran Peserta
+### 3.2 Manajemen Master Data Staff
 
-#### US-03: Mendaftarkan Staf via Input Manual
-> **Sebagai** Admin Instansi, **saya ingin** mendaftarkan staf saya secara manual dari database staf yang ada, **agar** proses pendaftaran lebih akurat.
-
-| # | Acceptance Criteria |
-|---|---------------------|
-| 1 | Admin Instansi dapat memilih staf dari daftar staf instansinya (pencarian berdasarkan NIP atau Nama). |
-| 2 | Data staf yang dipilih (NIP, Nama, Jabatan) otomatis terisi. |
-| 3 | Tidak dapat mendaftarkan NIP yang sama dua kali pada event yang sama. |
-
-#### US-04: Mendaftarkan Staf via Upload Excel
-> **Sebagai** Admin Instansi, **saya ingin** meng-upload file Excel berisi data staf, **agar** pendaftaran dalam jumlah banyak lebih cepat.
+#### US-03: Mengelola Data Staf Instansi (Kelola Staff)
+> **Sebagai** Admin Instansi, **saya ingin** memiliki menu khusus untuk mengelola data staf instansi saya, **agar** database peserta selalu siap sebelum mendaftarkan mereka ke suatu event.
 
 | # | Acceptance Criteria |
 |---|---------------------|
-| 1 | Sistem menerima file `.xlsx` / `.xls` dengan kolom: **NIP, Nama, Jabatan**. |
-| 2 | Sistem menyediakan template Excel yang dapat diunduh. |
-| 3 | Setelah upload, sistem menampilkan preview data untuk dikonfirmasi sebelum disimpan. |
-| 4 | Jika terdapat baris yang tidak valid (NIP duplikat, kolom kosong), sistem menampilkan daftar error per baris tanpa menggagalkan seluruh upload — baris yang valid tetap dapat disimpan. |
-| 5 | Jumlah peserta yang di-upload tidak melebihi sisa kuota event. |
+| 1 | Admin Instansi dapat menambah data staf secara manual (NIP, Nama, Jabatan). |
+| 2 | Admin Instansi dapat meng-upload file Excel (Template disediakan) untuk import massal. |
+| 3 | Sistem memvalidasi file Excel untuk mencegah duplikasi NIP dan baris kosong, menampilkan preview sebelum simpan utuh. |
 
-#### US-05: Membagi Jadwal Peserta ke Sesi/Tanggal
-> **Sebagai** Admin Instansi, **saya ingin** mendistribusikan staf yang telah didaftarkan ke tanggal/sesi yang berbeda, **agar** jadwal sesuai kebutuhan instansi saya.
+---
+
+### 3.3 Katalog & Pendaftaran PenKom
+
+#### US-04: Mendaftar Event di Katalog PenKom
+> **Sebagai** Admin Instansi, **saya ingin** mendaftarkan staf dari database yang sudah ada ke event PenKom tertentu, **agar** proses pendaftaran berjalan cepat dan langsung terpusat.
 
 | # | Acceptance Criteria |
 |---|---------------------|
-| 1 | Setelah peserta terdaftar pada suatu event, Admin Instansi melihat daftar sesi/tanggal beserta sisa kuota masing-masing. |
-| 2 | Admin Instansi dapat drag-and-drop atau memilih tanggal/sesi untuk setiap peserta. |
+| 1 | Mendaftar peserta dilakukan langsung dari halaman **Katalog PenKom** pada event yang aktif. |
+| 2 | Admin Instansi dapat mencentang/memilih staf dari database master staf, maupun meng-import staf sekaligus dari file Excel. |
+| 3 | Saat **import via Excel**, sistem wajib melakukan *cross-check* database (berdasarkan NIP): sistem mencatat staf baru jika belum ada, atau mendeteksi potensi *typo* (salah eja) nama jika NIP tersebut sudah tercatat di master database. |
+| 4 | Mencegah pendaftaran NIP ganda di event yang sama. |
+
+#### US-05: Mengatur Sesi / Jadwal Peserta (Di dalam Katalog PenKom)
+> **Sebagai** Admin Instansi, **saya ingin** dapat membagi sesi untuk para peserta pada pendaftaran yang masih riwayat tersimpan, **agar** jadwal disesuaikan dengan kuota event.
+
+| # | Acceptance Criteria |
+|---|---------------------|
+| 1 | Admin Instansi melihat riwayat pendaftaran di "Katalog PenKom", lalu mengeklik "Kelola Peserta & Sesi". |
+| 2 | Dapat melakukan drag-and-drop / pemilihan tanggal/sesi ke peserta. |
 | 3 | Sistem mencegah alokasi melebihi kuota harian yang tersedia. |
-| 4 | Semua peserta harus teralokasi ke salah satu sesi sebelum dapat melanjutkan ke proses generate surat. |
 
 ---
 
@@ -229,16 +231,20 @@ flowchart TD
 4. Sistem memvalidasi input, lalu menyimpan event dengan status **"Aktif"**.
 5. Sistem otomatis membuat record sesi untuk setiap hari antara tanggal mulai dan selesai, masing-masing dengan kuota yang telah ditentukan.
 
-#### Tahap 2 — Pendaftaran Peserta
+#### Tahap 1b — Pembangunan Master Data Staf (Admin Instansi)
+1. **Admin Instansi** navigasi ke menu **"Kelola Staff"**.
+2. Melakukan penambahan data pegawai secara manual (Satu per satu) atau menggunakan **Import Excel** secara masif.
+3. Database master staf instansi kini terbentuk dan siap digunakan sewaktu-waktu.
+
+#### Tahap 2 — Pendaftaran Peserta (Katalog PenKom)
 1. **Admin Instansi** login ke sistem.
-2. Navigasi ke menu **"Event Tersedia"**, melihat daftar event aktif beserta sisa kuota.
-3. Memilih event yang diinginkan, lalu klik **"Daftarkan Peserta"**.
-4. Memilih metode input:
-   - **Manual**: Mencari staf dari database instansi berdasarkan NIP/Nama, memilih satu per satu.
-   - **Upload Excel**: Mengunduh template, mengisi data, lalu meng-upload file `.xlsx`.
-5. Sistem memvalidasi data (duplikasi NIP, kelengkapan kolom, kesesuaian kuota).
-6. Menampilkan preview daftar peserta yang berhasil divalidasi.
-7. Admin Instansi mengkonfirmasi pendaftaran.
+2. Navigasi ke menu **"Katalog PenKom"**, melihat daftar event aktif beserta sisa kuota, serta tabel event-event yang sedang di-draft/diikuti instansinya.
+3. Memilih event yang tersedia, lalu klik **"Daftarkan Peserta"**.
+4. Memilih metode pendaftaran:
+   - **Pilih dari Kelola Staff (Database Internal)**: Mencentang nama-nama yang akan diberangkatkan.
+   - **Upload Excel Langsung**: Mengunggah daftar secara instan (yang otomatis juga dipertahankan ke master data staf).
+5. Sistem memvalidasi data (duplikasi NIP, kesesuaian kuota).
+6. Admin Instansi mengkonfirmasi pendaftaran; terbentuklah "Pendaftaran Draft".
 
 #### Tahap 3 — Pembagian Jadwal
 1. Setelah peserta terdaftar, sistem menampilkan halaman **"Atur Jadwal"**.
@@ -668,7 +674,7 @@ erDiagram
 
 Berikut fitur-fitur yang **tidak termasuk** dalam scope rilis pertama:
 
-- Integrasi pembayaran online.
+- Integrasi pembayaran online (Upload bukti transfer manual & verifikasi akan dikembangkan di V2 - lihat Bab 10).
 - Notifikasi email / push notification (dapat ditambahkan di iterasi berikutnya).
 - Integrasi tanda tangan digital berbasis sertifikat (BSrE) — V1 menggunakan tanda tangan digital sederhana (nama, jabatan, timestamp).
 - Mobile native application.
@@ -690,6 +696,18 @@ Berikut fitur-fitur yang **tidak termasuk** dalam scope rilis pertama:
 | 7     | Testing & QA                       | 1.5 minggu      | Unit test, integration test, UAT                |
 | 8     | Deployment & Go-Live               | 1 minggu        | Server setup, deployment, monitoring            |
 |       | **Total Estimasi**                 | **~11 minggu**  |                                                 |
+
+---
+
+## 10. Future Requirements (V2)
+
+Berdasarkan tinjauan dan diskusi pengembangan, beberapa fitur strategis akan dibangun pada fase V2. Salah satu fokus utama di V2 adalah kelengkapan administrasi pasca-persetujuan:
+
+### 10.1 Modul Verifikasi Pembayaran (V2)
+Untuk mengakomodir penyelesaian administrasi PenKom berbayar (PNBP), sistem akan dikembangkan dengan alur berikut:
+1. **Upload Bukti Pembayaran (Admin Instansi):** Setelah status surat "Diterima" oleh Kepala Puspenkom (tahap akhir), Admin Instansi akan mendapatkan akses ke menu khusus untuk mengunggah berkas bukti setor/transfer bank.
+2. **Validasi Pembayaran (Admin Puspenkom):** Admin Puspenkom akan memiliki submenu baru (contoh: *Validasi Pembayaran*) untuk mengecek bukti transfer yang diunggah.
+3. **Status Penyelesaian:** Setelah divalidasi oleh bendahara/Admin Puspenkom, status pendaftaran akan berubah menjadi **"Lunas / Selesai"**, yang akan memicu keluarnya bukti kuitansi atau tanda terima digital secara otomatis.
 
 ---
 

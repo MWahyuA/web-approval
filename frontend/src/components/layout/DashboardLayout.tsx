@@ -12,7 +12,10 @@ export default function DashboardLayout({ children, activePath = "/dashboard" }:
     const [userName, setUserName] = useState("");
     const [userRole, setUserRole] = useState("");
 
+    const [isMounted, setIsMounted] = useState(false);
+
     useEffect(() => {
+        setIsMounted(true);
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
             try {
@@ -23,7 +26,34 @@ export default function DashboardLayout({ children, activePath = "/dashboard" }:
                 console.error("Failed to parse user from localStorage", e);
             }
         }
+
+        const handleResize = () => {
+            if (window.innerWidth < 1024) {
+                setSidebarCollapsed(true);
+            } else {
+                const storedState = localStorage.getItem("sidebarCollapsed");
+                if (storedState) {
+                    setSidebarCollapsed(storedState === "true");
+                }
+            }
+        };
+
+        // Initial check
+        handleResize();
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
+
+    const handleToggleSidebar = () => {
+        const newState = !sidebarCollapsed;
+        setSidebarCollapsed(newState);
+        localStorage.setItem("sidebarCollapsed", String(newState));
+    };
+
+    if (!isMounted) {
+        return <div className="min-h-screen bg-[#F8FAFC]"></div>; // Prevent SSR flash of broken layout
+    }
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] flex">
@@ -31,13 +61,13 @@ export default function DashboardLayout({ children, activePath = "/dashboard" }:
             <Sidebar
                 activePath={activePath}
                 collapsed={sidebarCollapsed}
-                onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+                onToggle={handleToggleSidebar}
                 userRole={userRole}
             />
 
             {/* Main Content Area */}
             <div
-                className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? "ml-[72px]" : "ml-[260px]"
+                className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${sidebarCollapsed ? "ml-[72px]" : "ml-[72px] lg:ml-[260px]"
                     }`}
             >
                 <Header userName={userName} userRole={userRole} notificationCount={3} />

@@ -42,7 +42,7 @@ export default function Header({
                         {[
                             { text: "Surat pengajuan baru dari Kemenkumham", time: "5 menit lalu", unread: true },
                             { text: "Surat SURAT/002 telah ditandatangani", time: "1 jam lalu", unread: true },
-                            { text: "Event Manajerial Q3 kuota hampir penuh", time: "3 jam lalu", unread: false },
+                            { text: "PenKom Manajerial Q3 kuota hampir penuh", time: "3 jam lalu", unread: false },
                         ].map((n, i) => (
                             <div key={i} className={`px-4 py-3 hover:bg-slate-50 cursor-pointer flex items-start gap-3 ${n.unread ? "bg-primary-blue-light/30" : ""}`}>
                                 <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${n.unread ? "bg-primary-blue" : "bg-transparent"}`} />
