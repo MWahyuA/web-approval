@@ -16,7 +16,7 @@ Table.displayName = 'Table';
 
 const TableHeader = forwardRef<HTMLTableSectionElement, HTMLAttributes<HTMLTableSectionElement>>(
     ({ className, ...props }, ref) => (
-        <thead ref={ref} className={`[&_tr]:border-b bg-slate-50 border-slate-200 ${className || ''}`} {...props} />
+        <thead ref={ref} className={`[&_tr]:border-b bg-white border-slate-200 ${className || ''}`} {...props} />
     )
 );
 TableHeader.displayName = 'TableHeader';
@@ -47,7 +47,7 @@ const TableHead = forwardRef<HTMLTableCellElement, ThHTMLAttributes<HTMLTableCel
     ({ className, ...props }, ref) => (
         <th
             ref={ref}
-            className={`h-12 px-5 py-3 text-left align-middle text-[11px] font-semibold text-slate-500 uppercase tracking-wider [&:has([role=checkbox])]:pr-0 ${className || ''}`}
+            className={`h-14 px-5 py-3 text-left align-middle text-[11px] font-bold text-slate-500 uppercase tracking-widest [&:has([role=checkbox])]:pr-0 ${className || ''}`}
             {...props}
         />
     )
@@ -58,7 +58,7 @@ const TableCell = forwardRef<HTMLTableCellElement, TdHTMLAttributes<HTMLTableCel
     ({ className, ...props }, ref) => (
         <td
             ref={ref}
-            className={`px-5 py-4 align-middle text-sm text-slate-600 [&:has([role=checkbox])]:pr-0 ${className || ''}`}
+            className={`px-5 py-4 align-middle text-sm text-slate-700 font-medium [&:has([role=checkbox])]:pr-0 ${className || ''}`}
             {...props}
         />
     )
@@ -69,7 +69,7 @@ const TableFooter = forwardRef<HTMLTableSectionElement, HTMLAttributes<HTMLTable
     ({ className, ...props }, ref) => (
         <tfoot
             ref={ref}
-            className={`bg-slate-50/50 border-t border-slate-200 font-medium ${className || ''}`}
+            className={`bg-white border-t border-slate-200 ${className || ''}`}
             {...props}
         />
     )
