@@ -65,14 +65,14 @@ function getNavItems(role: string): NavItem[] {
     } else if (role === "admin_instansi") {
         return [
             { label: "Dashboard", href: "/admin-instansi/dashboard", icon: ICONS.dashboard },
-            { label: "Daftar PenKom", href: "/admin-instansi/events", icon: ICONS.event },
-            { label: "Pendaftaran", href: "/admin-instansi/pendaftaran", icon: ICONS.pendaftaran },
+            { label: "Kelola Staff", href: "/admin-instansi/staff", icon: ICONS.profil },
+            { label: "Katalog PenKom", href: "/admin-instansi/events", icon: ICONS.event },
             { label: "Surat", href: "/admin-instansi/surat", icon: ICONS.surat },
         ];
     } else if (role === "kepala_instansi") {
         return [
             { label: "Dashboard", href: "/kepala-instansi/dashboard", icon: ICONS.dashboard },
-            { label: "Daftar PenKom", href: "/kepala-instansi/events", icon: ICONS.event },
+            { label: "Katalog PenKom", href: "/kepala-instansi/events", icon: ICONS.event },
             { label: "Surat Pengajuan", href: "/kepala-instansi/surat", icon: ICONS.surat, badge: 2 },
         ];
     }
