@@ -51,28 +51,28 @@ export default function StaffManagement() {
 
             {/* Actions Bar */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <div className="w-full sm:w-80">
-                    <div className="relative">
-                        <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-                        </svg>
-                        <input
-                            type="text"
-                            placeholder="Cari berdasarkan NIP atau Nama..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary-blue focus:ring-1 focus:ring-primary-blue transition-shadow"
-                        />
-                    </div>
+                <div className="w-full flex-1">
+                    <Input
+                        wrapperClassName="w-full h-full"
+                        className="w-full h-full min-h-[44px]"
+                        placeholder="Cari berdasarkan NIP atau Nama..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        leftIcon={
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        }
+                    />
                 </div>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <Button variant="secondary" className="flex-1 sm:flex-none flex items-center justify-center gap-2" onClick={() => setIsImportModalOpen(true)}>
+                <div className="flex items-stretch gap-3 w-full sm:w-auto shrink-0">
+                    <Button variant="secondary" className="flex-1 sm:flex-none flex items-center justify-center gap-2 h-[44px]" onClick={() => setIsImportModalOpen(true)}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" />
                         </svg>
                         Import Excel
                     </Button>
-                    <Button variant="primary" className="flex-1 sm:flex-none flex items-center justify-center gap-2" onClick={() => setIsAddModalOpen(true)}>
+                    <Button variant="primary" className="flex-1 sm:flex-none flex items-center justify-center gap-2 h-[44px]" onClick={() => setIsAddModalOpen(true)}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg>
@@ -89,7 +89,7 @@ export default function StaffManagement() {
                         <TableHead>NIP</TableHead>
                         <TableHead>Nama Pegawai</TableHead>
                         <TableHead>Jabatan</TableHead>
-                        <TableHead className="text-center">Aksi</TableHead>
+                        <TableHead className="!text-center">Aksi</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -100,8 +100,8 @@ export default function StaffManagement() {
                                 <TableCell className="font-mono text-slate-700">{staff.nip}</TableCell>
                                 <TableCell className="font-semibold text-slate-900">{staff.name}</TableCell>
                                 <TableCell>{staff.position}</TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-2">
+                                <TableCell className="text-center">
+                                    <div className="flex items-center justify-center gap-2">
                                         <button className="h-8 w-8 rounded-full bg-amber-500 text-white flex items-center justify-center hover:bg-amber-600 transition-colors shadow-sm focus:outline-none" aria-label="Edit">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
                                         </button>
