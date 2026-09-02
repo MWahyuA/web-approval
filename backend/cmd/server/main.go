@@ -64,13 +64,6 @@ func main() {
 	mux.HandleFunc("GET /api/v1/bkn-regional-offices/{id}", bknOfficeHandler.GetOfficeByID)
 	mux.Handle("POST /api/v1/bkn-regional-offices", authMiddleware(http.HandlerFunc(bknOfficeHandler.CreateOffice)))
 
-	// Institutions & Staff Endpoints
-	mux.Handle("POST /api/v1/institutions", authMiddleware(http.HandlerFunc(instHandler.CreateInstitution)))
-	mux.HandleFunc("GET /api/v1/institutions", instHandler.GetInstitutions)
-	mux.HandleFunc("GET /api/v1/institutions/{id}", instHandler.GetInstitutionByID)
-	mux.Handle("POST /api/v1/staff", authMiddleware(http.HandlerFunc(instHandler.CreateStaff)))
-	mux.HandleFunc("GET /api/v1/institutions/{id}/staff", instHandler.GetStaffByInstitution)
-
 	// Events & Event Sessions Endpoints
 	mux.Handle("POST /api/v1/events", authMiddleware(http.HandlerFunc(eventHandler.CreateEvent)))
 	mux.HandleFunc("GET /api/v1/events", eventHandler.GetEvents)
@@ -87,6 +80,19 @@ func main() {
 
 	// 4. PUT: Edit event yang sudah ada berdasarkan eventId (Butuh Login / Admin)
 	mux.Handle("PUT /api/v1/events/{eventId}", authMiddleware(http.HandlerFunc(eventHandler.UpdateEvent)))
+
+	// Institutions & Staff Endpoints
+	mux.Handle("POST /api/v1/institutions", authMiddleware(http.HandlerFunc(instHandler.CreateInstitution)))
+	mux.HandleFunc("GET /api/v1/institutions", instHandler.GetInstitutions)
+	mux.HandleFunc("GET /api/v1/institutions/{id}", instHandler.GetInstitutionByID)
+	mux.Handle("PUT /api/v1/institutions/{id}", authMiddleware(http.HandlerFunc(instHandler.UpdateInstitution)))
+	mux.Handle("DELETE /api/v1/institutions/{id}", authMiddleware(http.HandlerFunc(instHandler.DeleteInstitution)))
+	// Staff Endpoints
+	mux.Handle("POST /api/v1/staff", authMiddleware(http.HandlerFunc(instHandler.CreateStaff)))
+	mux.HandleFunc("GET /api/v1/institutions/{id}/staff", instHandler.GetStaffByInstitution)
+	mux.HandleFunc("GET /api/v1/staff/{id}", instHandler.GetStaffByID)
+	mux.Handle("PUT /api/v1/staff/{id}", authMiddleware(http.HandlerFunc(instHandler.UpdateStaff)))
+	mux.Handle("DELETE /api/v1/staff/{id}", authMiddleware(http.HandlerFunc(instHandler.DeleteStaff)))
 
 	// 5. Apply middleware
 	stack := middleware.Chain(
