@@ -19,7 +19,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 func (r *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 	var user model.User
 	query := `
-		SELECT id, name, email, password_hash, role, created_at, updated_at 
+		SELECT id, name, email, password_hash, role, institution_id, created_at, updated_at 
 		FROM users 
 		WHERE email = $1
 	`
@@ -30,6 +30,7 @@ func (r *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 		&user.Email,
 		&user.PasswordHash,
 		&user.Role,
+		&user.InstitutionID,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -48,7 +49,7 @@ func (r *UserRepository) GetUserByEmail(email string) (*model.User, error) {
 func (r *UserRepository) GetUserByID(id string) (*model.User, error) {
 	var user model.User
 	query := `
-		SELECT id, name, email, password_hash, role, created_at, updated_at 
+		SELECT id, name, email, password_hash, role, institution_id, created_at, updated_at 
 		FROM users 
 		WHERE id = $1
 	`
@@ -59,6 +60,7 @@ func (r *UserRepository) GetUserByID(id string) (*model.User, error) {
 		&user.Email,
 		&user.PasswordHash,
 		&user.Role,
+		&user.InstitutionID,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)

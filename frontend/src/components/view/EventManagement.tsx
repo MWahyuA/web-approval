@@ -257,7 +257,7 @@ export default function EventManagement() {
         <div className="flex flex-col gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header Area */}
             <div>
-                <h1 className="text-2xl font-bold text-slate-900 mb-1">📅 Kelola Penilaian Kompetensi</h1>
+                <h1 className="text-2xl font-bold text-slate-900 mb-1">Kelola Penilaian Kompetensi</h1>
                 <p className="text-sm text-slate-500">Buat, edit, dan pantau status PenKom.</p>
             </div>
 
