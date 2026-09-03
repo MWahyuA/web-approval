@@ -3,12 +3,14 @@ import React, { useState } from "react";
 interface HeaderProps {
     userName?: string;
     userRole?: string;
+    instCode?: string;
     notificationCount?: number;
 }
 
 export default function Header({
     userName = "",
     userRole = "",
+    instCode = "",
     notificationCount = 5,
 }: HeaderProps) {
     const [showDropdown, setShowDropdown] = useState(false);
@@ -73,7 +75,10 @@ export default function Header({
                     </div>
                     <div className="hidden sm:flex flex-col items-start leading-tight">
                         <span className="text-sm font-semibold text-slate-800">{userName || "\u00A0"}</span>
-                        <span className="text-[11px] text-slate-400 capitalize">{userRole ? userRole.replace(/_/g, ' ') : "\u00A0"}</span>
+                        <span className="text-[11px] text-slate-400 capitalize">
+                            {userRole ? userRole.replace(/_/g, ' ') : "\u00A0"}
+                            {instCode && (userRole === "admin_instansi" || userRole === "kepala_instansi") ? ` ${instCode}` : ""}
+                        </span>
                     </div>
                     <svg className="text-slate-400 hidden sm:block" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m6 9 6 6 6-6" />

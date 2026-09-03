@@ -4,13 +4,14 @@ import "time"
 
 // User merepresentasikan entitas pengguna di database Supabase
 type User struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"-"` // "-" agar password_hash TIDAK PERNAH dikirim ke JSON response
-	Role         string    `json:"role"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
+	ID            string    `json:"id"`
+	Name          string    `json:"name"`
+	Email         string    `json:"email"`
+	PasswordHash  string    `json:"-"` // "-" agar password_hash TIDAK PERNAH dikirim ke JSON response
+	Role          string    `json:"role"`
+	InstitutionID *string   `json:"institution_id,omitempty"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // RegisterRequest adalah format JSON payload input saat mendaftar
