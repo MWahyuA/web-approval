@@ -200,3 +200,4 @@ func (r *InstitutionRepository) DeleteInstitution(id string) error {
 	}
 	return nil
 }
+
